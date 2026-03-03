@@ -149,6 +149,7 @@ VenueGo 是一个面向单城市（可扩展至多城市）的本地活动与演
 - 秒杀接口 P95 响应时间 < 200ms
 - 异步订单最终一致时间 < 5s
 
+限流
 ---
 
 ## 3.2 可用性
@@ -210,7 +211,8 @@ VenueGo 是一个面向单城市（可扩展至多城市）的本地活动与演
    - Decision: Primary-Replica
    - Alternative: Quorum based(Raft)
    - Justification:单城市/单区域部署，不必太复杂;Quorum写延迟更高
-3. 
+3. 由Ingress/Gateway负责 jwt verify
+4. 
 拆分主要用这 5 条标准（每条都“可解释、可落地”）：
 
 业务边界（Bounded Context）
