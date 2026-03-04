@@ -1,0 +1,59 @@
+server:
+  port: 6236
+
+spring:
+  application:
+    name: venuego.venue
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # 核心：添加了 allowPublicKeyRetrieval=true
+    url: jdbc:mysql://127.0.0.1:3306/venuego?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=utf8&allowPublicKeyRetrieval=true
+    username: root
+    password: 4445566
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        # 注意：Hibernate 6.x/Spring Boot 3+ 推荐写法
+        jdbc:
+          time_zone: UTC
+
+  jackson:
+    time-zone: UTC
+    # serialization:
+    #   "WRITE_DATES_AS_TIMESTAMPS": false
+
+  data:
+    redis:
+      host: 127.0.0.1
+      port: 6379
+      timeout: 2s
+      
+  # 如果你不使用 Flyway 迁移脚本，请务必关闭它，否则它会因为找不到脚本或连不上库而报错
+  flyway:
+    enabled: false
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE
