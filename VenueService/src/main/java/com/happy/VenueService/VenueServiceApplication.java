@@ -1,4 +1,4 @@
-package com.example.VenueService;
+package com.happy.VenueService;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
