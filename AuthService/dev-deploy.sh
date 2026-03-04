@@ -13,7 +13,6 @@ docker run -d \
   --name ${APP_NAME} \
   --network venuego-net \
   -p ${HOST_PORT}:${CONTAINER_PORT} \
-  -e SPRING_PROFILES_ACTIVE=prod \
   --restart unless-stopped \
   -e SPRING_PROFILES_ACTIVE=dev \
   ${IMAGE_NAME}:${TAG}
