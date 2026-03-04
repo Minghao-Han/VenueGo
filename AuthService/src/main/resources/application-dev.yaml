@@ -1,0 +1,62 @@
+server:
+  port: 6235
+
+spring:
+  application:
+    name: venuego.auth
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://mysql-dev:3306/venuego?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=utf8
+    username: root
+    password: 4445566
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+
+  jpa:
+    hibernate:
+      ddl-auto: update   # 本地开发：自动根据实体类创建/更新表结构；生产建议 validate + Flyway
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          time_zone: UTC
+
+  jackson:
+    time-zone: UTC
+    serialization:
+      write-dates-as-timestamps: false
+
+  data:
+    redis:
+      host: redis-dev
+      port: 6379
+      timeout: 2s
+
+security:
+  jwt:
+    access-token-ttl: 3600
+    public-key-location: classpath:keys/public.pem
+    private-key-location: classpath:keys/private.pem
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.orm.jdbc.bind: TRACE   # 打印SQL参数（Spring Boot 3 / Hibernate 6）
+    # 如果你是旧版本可用：org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+management:
+  endpoint:
+    health:
+      probes:
+        enabled: true
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
