@@ -33,7 +33,6 @@ type Query {
 type VenueConnection {
     edges: [VenueEdge]
     pageInfo: PageInfo!
-    totalCount: Int
 }
 
 type VenueEdge {

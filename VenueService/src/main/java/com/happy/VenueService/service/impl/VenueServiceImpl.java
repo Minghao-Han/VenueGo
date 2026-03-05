@@ -12,8 +12,8 @@ import com.happy.VenueService.repository.VenueRepository;
 import com.happy.VenueService.service.VenueService;
 import java.util.UUID;
 import java.util.stream.Collectors;
-
 import org.springframework.data.domain.ScrollPosition;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
@@ -137,16 +137,17 @@ public class VenueServiceImpl implements VenueService {
 
     @Override
     public Window<Venue> getVenues(VenueFilter filter, ScrollPosition position, Integer first) {
-    Specification<Venue> spec = Specification
-    .where(VenueSpecifications.hasCity(filter.getCityCode()))
-    .and(VenueSpecifications.minPriceGreaterThan(filter.getMinPrice()))
-    .and(VenueSpecifications.maxPriceLessThan(filter.getMaxPrice()))
-    .and(VenueSpecifications.hasStartTimeBefore(filter.getStartTimeBefore()))
-    .and(VenueSpecifications.hasStartTimeAfter(filter.getStartTimeAfter()))
-    .and(VenueSpecifications.hasCategoryIn(filter.getCategories()));
-    // .and()
+        VenueFilter safeFilter = filter != null ? filter : new VenueFilter();
+        Specification<Venue> spec = Specification
+            .where(VenueSpecifications.hasCity(safeFilter.getCityCode()))
+            .and(VenueSpecifications.minPriceGreaterThan(safeFilter.getMinPrice()))
+            .and(VenueSpecifications.maxPriceLessThan(safeFilter.getMaxPrice()))
+            .and(VenueSpecifications.hasStartTimeBefore(safeFilter.getStartTimeBefore()))
+            .and(VenueSpecifications.hasStartTimeAfter(safeFilter.getStartTimeAfter()))
+            .and(VenueSpecifications.hasCategoryIn(safeFilter.getCategories()));
 
-    return venueRepository.findBy(spec, q -> q.limit(first != null ? first : 10).scroll(position));
-
+        return venueRepository.findBy(spec, q -> q.sortBy(Sort.by("id").ascending())
+            .limit(first != null ? first : 10)
+            .scroll(position));
     }
 }

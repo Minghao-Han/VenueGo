@@ -1,7 +1,9 @@
 package com.happy.VenueService.controller;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Window;
@@ -27,7 +29,7 @@ public class VenueGraphQLController {
      * 如果前端传了 filter: { cityCode: "SH" }，Spring 会自动填充到 VenueFilter 对象里
      */
     @QueryMapping
-    public Window<Venue> venuesConnection(
+    public VenueConnection venuesConnection(
             @Argument Integer first, 
             @Argument String after, 
             @Argument VenueFilter filter) {
@@ -39,11 +41,72 @@ public class VenueGraphQLController {
             ? ScrollPosition.forward(Collections.singletonMap("id", UUID.fromString(after)))
             : ScrollPosition.offset();
         // 调用 Service 执行带 Specification 的查询
-        // 这里返回的是 Window<Venue>，Spring GraphQL 会自动将其匹配到 Schema 中的 Connection 类型
-        return venueService.getVenues(filter, position, first);
+        // 显式组装 GraphQL Connection，确保 pageInfo 非空并匹配 schema。
+        Window<Venue> window = venueService.getVenues(filter, position, first);
+        List<VenueEdge> edges = window.getContent().stream()
+                .map(venue -> new VenueEdge(venue.getId().toString(), venue))
+                .collect(Collectors.toList());
+        String endCursor = edges.isEmpty() ? null : edges.get(edges.size() - 1).getCursor();
+        PageInfo pageInfo = new PageInfo(window.hasNext(), endCursor);
+        return new VenueConnection(edges, pageInfo);
     }
+
     @QueryMapping
     public Venue venueById(@Argument UUID id) {
         return venueService.getVenueById(id);
+    }
+
+    public static class VenueConnection {
+        private final List<VenueEdge> edges;
+        private final PageInfo pageInfo;
+
+        public VenueConnection(List<VenueEdge> edges, PageInfo pageInfo) {
+            this.edges = edges;
+            this.pageInfo = pageInfo;
+        }
+
+        public List<VenueEdge> getEdges() {
+            return edges;
+        }
+
+        public PageInfo getPageInfo() {
+            return pageInfo;
+        }
+    }
+
+    public static class VenueEdge {
+        private final String cursor;
+        private final Venue node;
+
+        public VenueEdge(String cursor, Venue node) {
+            this.cursor = cursor;
+            this.node = node;
+        }
+
+        public String getCursor() {
+            return cursor;
+        }
+
+        public Venue getNode() {
+            return node;
+        }
+    }
+
+    public static class PageInfo {
+        private final boolean hasNextPage;
+        private final String endCursor;
+
+        public PageInfo(boolean hasNextPage, String endCursor) {
+            this.hasNextPage = hasNextPage;
+            this.endCursor = endCursor;
+        }
+
+        public boolean getHasNextPage() {
+            return hasNextPage;
+        }
+
+        public String getEndCursor() {
+            return endCursor;
+        }
     }
 }
