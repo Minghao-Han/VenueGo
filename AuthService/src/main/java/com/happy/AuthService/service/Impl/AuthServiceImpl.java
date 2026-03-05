@@ -27,6 +27,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.happy.grpc.UserProfileProto.InitProfileRequest;
+import com.happy.grpc.UserProfileServiceGrpc;
+import net.devh.boot.grpc.client.inject.GrpcClient;
+
 @Service
 public class AuthServiceImpl implements AuthService {
 
@@ -37,6 +41,9 @@ public class AuthServiceImpl implements AuthService {
     private final JwtDecoder jwtDecoder;
     private final RsaKeyProperties rsaKeyProperties;
     private final StringRedisTemplate redisTemplate;
+
+    @GrpcClient("user-service")
+    private UserProfileServiceGrpc.UserProfileServiceBlockingStub userProfileStub;
 
     public AuthServiceImpl(UserRepository userRepository,
                            PasswordEncoder passwordEncoder,
@@ -72,6 +79,14 @@ public class AuthServiceImpl implements AuthService {
         user.setRoles("USER");
         userRepository.save(user);
 
+        // gRPC 调用 UserService 初始化 Profile
+        InitProfileRequest grpcRequest = InitProfileRequest.newBuilder()
+                .setUserId(user.getId().toString())
+                .setUsername(request.getUsername())
+                .setEmail(request.getEmail())
+                .build();
+        userProfileStub.initProfile(grpcRequest);
+
         cacheHashedPassword(user.getUsername(), encodedPassword);
         return new ApiResponse("Register success");
     }
@@ -98,7 +113,7 @@ public class AuthServiceImpl implements AuthService {
                 .issuer("venuego-auth-service")
                 .issuedAt(now)
                 .expiresAt(expiry)
-                .subject(user.getUsername())
+                .subject(user.getId().toString())
                 .id(jti)
                 .claim("email", user.getEmail())
                 .claim("roles", roles)

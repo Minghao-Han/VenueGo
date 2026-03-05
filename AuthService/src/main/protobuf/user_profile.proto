@@ -1,0 +1,21 @@
+syntax = "proto3";
+
+package user;
+
+option java_package = "com.happy.grpc";
+option java_outer_classname = "UserProfileProto";
+
+service UserProfileService {
+  rpc InitProfile (InitProfileRequest) returns (InitProfileResponse);
+}
+
+message InitProfileRequest {
+  string user_id = 1;
+  string username = 2;
+  string email    = 3;
+}
+
+message InitProfileResponse {
+  bool success = 1;
+  string message = 2;
+}

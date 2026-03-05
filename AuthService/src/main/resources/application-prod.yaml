@@ -60,3 +60,10 @@ management:
     web:
       exposure:
         include: health,info,metrics,prometheus
+
+
+grpc:
+  client:
+    user-service:
+      address: static://user-service:9090
+      negotiation-type: plaintext
