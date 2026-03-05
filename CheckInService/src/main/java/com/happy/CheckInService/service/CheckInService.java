@@ -2,6 +2,9 @@ package com.happy.CheckInService.service;
 
 import com.happy.CheckInService.dto.CheckInResult;
 import com.happy.CheckInService.entity.Ticket;
+import com.happy.CheckInService.exception.BusinessException;
+import com.happy.CheckInService.exception.TicketAlreadyUsedException;
+import com.happy.CheckInService.exception.TicketNotFoundException;
 import com.happy.CheckInService.mapper.TicketMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -72,9 +75,9 @@ public class CheckInService {
 
         return switch (result.intValue()) {
             case 1  -> handleSuccess(ticketCode);
-            case -1 -> CheckInResult.fail("无效票码");
-            case -2 -> CheckInResult.fail("该票已使用");
-            default -> CheckInResult.fail("系统异常");
+            case -1 -> throw new TicketNotFoundException();
+            case -2 -> throw new TicketAlreadyUsedException();
+            default -> throw new BusinessException(500, "系统异常");
         };
     }
 
