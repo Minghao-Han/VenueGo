@@ -1,0 +1,21 @@
+server:
+  port: 6237
+
+spring:
+  application:
+    name: venuego.checkin
+  redis:
+    host: localhost
+    port: 6379
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/venuego?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=utf8&allowPublicKeyRetrieval=true
+    username: root
+    password: 4445566
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
