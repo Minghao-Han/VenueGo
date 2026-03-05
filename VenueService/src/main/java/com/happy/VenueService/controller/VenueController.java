@@ -45,7 +45,7 @@ public class VenueController {
     })
     public ResponseEntity<VenueResponse> createVenue(
             @Parameter(description = "Host UUID from request header", required = true)
-            @RequestHeader("host_id") UUID hostId,
+            @RequestHeader("X-User-Id") UUID hostId,
             @Valid @RequestBody VenueUpsertRequest request) {
         return ResponseEntity.ok(venueService.createVenue(request, hostId));
     }
@@ -60,7 +60,7 @@ public class VenueController {
     public ResponseEntity<VenueResponse> updateVenue(
             @Parameter(description = "Venue UUID", required = true) @PathVariable UUID venueId,
             @Parameter(description = "Host UUID from request header", required = true)
-            @RequestHeader("host_id") UUID hostId,
+            @RequestHeader("X-User-Id") UUID hostId,
             @Valid @RequestBody VenueUpsertRequest request) {
         return ResponseEntity.ok(venueService.updateVenue(venueId, request, hostId));
     }
@@ -75,7 +75,7 @@ public class VenueController {
     public ResponseEntity<Void> deleteVenue(
             @Parameter(description = "Venue UUID", required = true) @PathVariable UUID venueId,
             @Parameter(description = "Host UUID from request header", required = true)
-            @RequestHeader("host_id") UUID hostId) {
+            @RequestHeader("X-User-Id") UUID hostId) {
         venueService.deleteVenue(venueId, hostId);
         return ResponseEntity.ok().build();
     }
