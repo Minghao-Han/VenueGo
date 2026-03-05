@@ -36,7 +36,10 @@ public class GlobalExceptionHandler {
                 .collect(Collectors.joining("; "));
         return ResponseEntity.badRequest().body(new ApiResponse(errors));
     }
-
+    @ExceptionHandler(InterruptedException.class)
+    public ResponseEntity<String> handleInterruptedException(InterruptedException e) {
+        return ResponseEntity.status(500).body("Thread interrupted");
+    }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse> handleOther(Exception ex) {
         String message = ex.getMessage() == null || ex.getMessage().isBlank()

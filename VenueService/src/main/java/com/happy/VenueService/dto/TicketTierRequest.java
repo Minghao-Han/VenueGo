@@ -3,6 +3,9 @@ package com.happy.VenueService.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
+
+import com.happy.VenueService.entity.TicketTier;
+
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
@@ -20,4 +23,14 @@ public class TicketTierRequest {
     private OffsetDateTime saleStartTime;
     @Schema(description = "Sale end time in ISO-8601 with offset", example = "2026-05-01T18:00:00+08:00")
     private OffsetDateTime saleEndTime;
+    
+    public static TicketTier toEntity(TicketTierRequest request) {
+        TicketTier tier = new TicketTier();
+        tier.setTierName(request.getTierName());
+        tier.setPrice(request.getPrice());
+        tier.setTotalCapacity(request.getTotalCapacity());
+        tier.setSaleStartTime(request.getSaleStartTime());
+        tier.setSaleEndTime(request.getSaleEndTime());
+        return tier;
+    }
 }
