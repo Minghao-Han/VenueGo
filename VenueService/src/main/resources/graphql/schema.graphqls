@@ -1,0 +1,81 @@
+# schema.graphqls
+
+scalar DateTime
+scalar BigDecimal
+input VenueFilter {
+    cityCode: String
+    minPrice: BigDecimal
+    maxPrice: BigDecimal
+    startTimeBefore: DateTime
+    startTimeAfter: DateTime
+    categories: [String]
+}
+
+type Query {
+    # 1. 根据 ID 查询详情 (直接 B+ 树主键查找，性能最高)
+    # 无论 filter 增加多少字段，此接口签名始终不动
+    venueById(id: ID!): Venue
+
+    # 2. 用户端：基于游标的高性能分页
+    venuesConnection(
+        first: Int = 10, 
+        after: String, 
+        filter: VenueFilter
+    ): VenueConnection
+
+    # 3. 管理端：基于偏移量的跳转分页
+    #venuesPage(
+    #    limit: Int = 10, 
+    #    offset: Int = 0, 
+    #    filter: VenueFilter
+    #): VenuePageResponse
+}
+type VenueConnection {
+    edges: [VenueEdge]
+    pageInfo: PageInfo!
+    totalCount: Int
+}
+
+type VenueEdge {
+    cursor: String!
+    node: Venue
+}
+
+type PageInfo {
+    hasNextPage: Boolean!
+    endCursor: String
+}
+type Venue {
+    id: ID!
+    hostId: ID!
+    name: String!
+    address: String!
+    cityCode: String
+    latitude: Float!
+    longitude: Float!
+    description: String
+    capacity: Int
+    ticketTiers: [TicketTier!]!
+    startTime: DateTime
+    endTime: DateTime
+    posterUrl: String
+    status: VenueStatus
+    createdAt: DateTime
+    updatedAt: DateTime
+}
+type TicketTier {
+    id: ID!
+    tierName: String!
+    price: Float!
+    totalCapacity: Int!
+    saleStartTime: DateTime
+    saleEndTime: DateTime
+}
+
+enum VenueStatus {
+    UPCOMING
+    SALE_ON
+    SOLD_OUT
+    FINISHED
+    CANCELLED
+}

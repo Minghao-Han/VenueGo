@@ -212,7 +212,7 @@ VenueGo 是一个面向单城市（可扩展至多城市）的本地活动与演
    - Alternative: Quorum based(Raft)
    - Justification:单城市/单区域部署，不必太复杂;Quorum写延迟更高
 3. 由Ingress/Gateway负责 jwt verify
-4. 
+4. Venue等活动信息读远大于写
 拆分主要用这 5 条标准（每条都“可解释、可落地”）：
 
 业务边界（Bounded Context）
@@ -242,3 +242,5 @@ VenueGo 是一个面向单城市（可扩展至多城市）的本地活动与演
 支付、通知、统计属于外部依赖/慢服务，隔离后不会拖死下单
 
 社交/Feed 的 Redis 结构复杂，隔离后不会影响交易域的稳定性
+
+

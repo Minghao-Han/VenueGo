@@ -4,7 +4,6 @@ server:
 spring:
   application:
     name: venuego.venue
-
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     # 核心：添加了 allowPublicKeyRetrieval=true

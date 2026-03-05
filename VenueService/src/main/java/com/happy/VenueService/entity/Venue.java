@@ -5,7 +5,8 @@ import jakarta.persistence.*;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.UUID;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import com.happy.VenueService.UUID.IdGeneratorProvider;
@@ -25,6 +26,7 @@ import org.hibernate.type.SqlTypes;
 @NoArgsConstructor
 @Entity
 @Table(name = "venues", indexes = {
+    @Index(name = "idx_venue_host", columnList = "host_id"),
     @Index(name = "idx_venue_city", columnList = "city_code"),
     @Index(name = "idx_venue_coords", columnList = "latitude, longitude"),
     @Index(name = "idx_start_time", columnList = "start_time") // 增加时间索引优化排序
@@ -41,6 +43,10 @@ public class Venue {
 
     @Column(nullable = false)
     private String address;
+
+    @JdbcTypeCode(SqlTypes.BINARY)
+    @Column(name = "host_id", nullable = false, columnDefinition = "BINARY(16)")
+    private UUID hostId;
 
     @Column(name = "city_code", length = 20)
     private String cityCode;
@@ -60,10 +66,10 @@ public class Venue {
     // --- 活动特有属性合并至此 ---
     
     @Column(name = "start_time")
-    private LocalDateTime startTime;
+    private OffsetDateTime startTime;
 
     @Column(name = "end_time")
-    private LocalDateTime endTime;
+    private OffsetDateTime endTime;
 
     @Column(name = "poster_url")
     private String posterUrl; // 海报地址
@@ -82,10 +88,10 @@ public class Venue {
     // --- 审计字段 ---
 
     @Column(name = "created_at", updatable = false)
-    private LocalDateTime createdAt;
+    private OffsetDateTime createdAt;
 
     @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
+    private OffsetDateTime updatedAt;
 
     @PrePersist
     protected void onCreate() {
@@ -93,12 +99,12 @@ public class Venue {
         if (this.id == null) {
             this.id = IdGeneratorProvider.generateId();
         }
-        this.createdAt = LocalDateTime.now();
-        this.updatedAt = LocalDateTime.now();
+        this.createdAt = OffsetDateTime.now(ZoneOffset.UTC);
+        this.updatedAt = OffsetDateTime.now(ZoneOffset.UTC);
     }
 
     @PreUpdate
     protected void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
+        this.updatedAt = OffsetDateTime.now(ZoneOffset.UTC);
     }
 }

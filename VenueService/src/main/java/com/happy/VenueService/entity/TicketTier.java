@@ -1,7 +1,7 @@
 package com.happy.VenueService.entity;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import org.hibernate.annotations.JdbcTypeCode;
@@ -36,10 +36,10 @@ public class TicketTier {
     private Integer totalCapacity; // 总库存
 
     @Column(name = "sale_start_time")
-    private LocalDateTime saleStartTime;
+    private OffsetDateTime saleStartTime;
 
     @Column(name = "sale_end_time")
-    private LocalDateTime saleEndTime;
+    private OffsetDateTime saleEndTime;
 
     @PrePersist
     protected void onCreate() {
