@@ -1,4 +1,4 @@
-package com.happy.VenueService.UUID;
+package com.happy.VenueService.util.UUID;
 import java.util.UUID;
 
 /**

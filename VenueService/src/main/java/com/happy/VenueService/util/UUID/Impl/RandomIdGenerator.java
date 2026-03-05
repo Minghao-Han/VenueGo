@@ -1,5 +1,5 @@
-package com.happy.VenueService.UUID.Impl;
-import com.happy.VenueService.UUID.IdGeneratorStrategy;
+package com.happy.VenueService.util.UUID.Impl;
+import com.happy.VenueService.util.UUID.IdGeneratorStrategy;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;

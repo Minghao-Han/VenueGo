@@ -1,6 +1,6 @@
-package com.happy.VenueService.UUID.Impl;
+package com.happy.VenueService.util.UUID.Impl;
 
-import com.happy.VenueService.UUID.IdGeneratorStrategy;
+import com.happy.VenueService.util.UUID.IdGeneratorStrategy;
 import com.github.f4b6a3.uuid.UuidCreator;
 import java.util.UUID;
 
