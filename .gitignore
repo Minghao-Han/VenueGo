@@ -13,7 +13,7 @@ gradle-app.setting
 
 # IDE
 .idea/
-.vscode/
+# .vscode/
 *.iml
 *.iws
 *.ipr

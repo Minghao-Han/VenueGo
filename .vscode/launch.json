@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "java",
+            "name": "VenueServiceApplication",
+            "request": "launch",
+            "mainClass": "com.happy.VenueService.VenueServiceApplication",
+            "projectName": "VenueService",
+            "vmArgs": "-Dspring.profiles.active=dev"
+        },
+        {
+            "type": "java",
+            "name": "AuthServiceApplication",
+            "request": "launch",
+            "mainClass": "com.happy.AuthService.AuthServiceApplication",
+            "projectName": "AuthService",
+            "vmArgs": "-Dspring.profiles.active=dev"
+        }
+    ]
+}
