@@ -3,6 +3,14 @@
     "configurations": [
         {
             "type": "java",
+            "name": "CheckInServiceApplication",
+            "request": "launch",
+            "mainClass": "com.happy.CheckInService.CheckInServiceApplication",
+            "projectName": "CheckInService",
+            "vmArgs": "-Dspring.profiles.active=dev"
+        },
+        {
+            "type": "java",
             "name": "VenueServiceApplication",
             "request": "launch",
             "mainClass": "com.happy.VenueService.VenueServiceApplication",
