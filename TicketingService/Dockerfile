@@ -20,5 +20,6 @@ ENV SPRING_PROFILES_ACTIVE=dev
 
 COPY --from=builder /app/target/*.jar /app/app.jar
 
-EXPOSE 6236
+EXPOSE 6240
+EXPOSE 9240
 ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=${SPRING_PROFILES_ACTIVE}"]

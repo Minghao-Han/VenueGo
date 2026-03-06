@@ -4,8 +4,9 @@
 APP_NAME="ticketing-service"
 IMAGE_NAME="ticketing-service"
 TAG="v1"
-HOST_PORT=9240
-CONTAINER_PORT=9240
+HOST_PORT=6240
+CONTAINER_PORT=6240
+GRPC_PORT=9240
 PROFILE=${1:-dev}
 
 # --- 启动新容器 ---
@@ -15,6 +16,7 @@ docker run -d \
   --rm \
   --network venuego-net \
   -p ${HOST_PORT}:${CONTAINER_PORT} \
+  -p ${GRPC_PORT}:${GRPC_PORT} \
   -e SPRING_PROFILES_ACTIVE=${PROFILE} \
   ${IMAGE_NAME}:${TAG}
 

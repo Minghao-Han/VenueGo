@@ -107,7 +107,7 @@ public class VenueServiceImpl implements VenueService {
         }
 
         try {
-            validateTicketTierUpdateWindow(request.getTicketTiers());
+            // validateTicketTierUpdateWindow(request.getTicketTiers());
             Venue venue = getVenueEntityOrThrow(venueId, hostId);
             List<UUID> oldTierIds = venue.getTicketTiers().stream().map(TicketTier::getId).toList();
             applyVenueData(venue, request);

@@ -28,7 +28,7 @@ rocketmq:
 
 ticketing:
   mq:
-    purchase-topic: ticketing.purchase.success
+    purchase-topic: ticketing-purchase-success
     inventory-consumer-group: ticketing-inventory-consumer
     order-consumer-group: ticketing-order-consumer
   redis:
