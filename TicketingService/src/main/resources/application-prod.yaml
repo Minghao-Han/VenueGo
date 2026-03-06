@@ -1,0 +1,38 @@
+server:
+  port: 6240
+
+grpc:
+  server:
+    port: 9240
+
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://mysql-dev:3306/venuego?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=utf8&allowPublicKeyRetrieval=true
+    username: root
+    password: 4445566
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+  data:
+    redis:
+      host: redis-dev
+      port: 6379
+      timeout: 2s
+
+rocketmq:
+  name-server: rmqnamesrv:9876
+  producer:
+    group: ticketing-producer-group
+
+ticketing:
+  mq:
+    purchase-topic: ticketing.purchase.success
+    inventory-consumer-group: ticketing-inventory-consumer
+    order-consumer-group: ticketing-order-consumer
+  redis:
+    key:
+      inventory-prefix: "ticket:ivtr:"
+      info-prefix: "ticket:info:"
+      ordered-prefix: "ticket:ordered:"
