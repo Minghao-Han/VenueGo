@@ -1,11 +1,11 @@
 #!/bin/bash
 
 # --- 1. 配置变量 ---
-APP_NAME="venue-service"
-IMAGE_NAME="venue-service"
+APP_NAME="ticketing-service"
+IMAGE_NAME="ticketing-service"
 TAG="v1"
-HOST_PORT=6236
-CONTAINER_PORT=6236
+HOST_PORT=9240
+CONTAINER_PORT=9240
 PROFILE=${1:-dev}
 
 # --- 启动新容器 ---
