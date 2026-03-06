@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.happy.ticketing.inventory.grpc";
+option java_outer_classname = "InventorySyncProto";
+
+package ticketing.inventory;
+
+service InventorySyncService {
+  rpc UpsertInventory (UpsertInventoryRequest) returns (UpsertInventoryResponse);
+  rpc DeleteInventories (DeleteInventoriesRequest) returns (DeleteInventoriesResponse);
+}
+
+message UpsertInventoryRequest {
+  string ticketTierId = 1;
+  int32 availableInventory = 2;
+  int32 purchaseLimit = 3;
+  string saleStartTime = 4;
+  string saleEndTime = 5;
+  string idempotencyKey = 6;
+}
+
+message UpsertInventoryResponse {
+  bool success = 1;
+  string message = 2;
+  string inventoryId = 3;
+}
+
+message DeleteInventoriesRequest {
+  repeated string ticketTierIds = 1;
+}
+
+message DeleteInventoriesResponse {
+  bool success = 1;
+  string message = 2;
+  int32 deletedCount = 3;
+}

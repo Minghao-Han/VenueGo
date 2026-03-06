@@ -12,8 +12,11 @@ import com.happy.VenueService.dto.TicketTierRequest;
 import com.happy.VenueService.dto.VenueResponse;
 import com.happy.VenueService.dto.VenueUpsertRequest;
 import com.happy.VenueService.entity.Venue;
+import com.happy.VenueService.entity.TicketTier;
+import com.happy.VenueService.event.TicketTiersDeletedEvent;
 import com.happy.VenueService.exception.BusinessException;
 import com.happy.VenueService.repository.VenueRepository;
+import com.happy.VenueService.service.InventorySyncClient;
 import com.happy.VenueService.service.VenueService;
 import com.happy.VenueService.util.Lock.ILock;
 import com.happy.VenueService.util.Random.IRandom;
@@ -21,12 +24,15 @@ import com.happy.VenueService.util.Random.IRandom;
 import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 import org.redisson.api.RBloomFilter;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Window;
@@ -49,6 +55,8 @@ public class VenueServiceImpl implements VenueService {
     private final JsonMapper objectMapper;
     private final ILock lock;
     private final RedissonConfig redissonConfig;
+    private final InventorySyncClient inventorySyncClient;
+    private final ApplicationEventPublisher eventPublisher;
 
     public VenueServiceImpl(VenueRepository venueRepository, 
         StringRedisTemplate redisTemplate, 
@@ -56,7 +64,9 @@ public class VenueServiceImpl implements VenueService {
         IRandom random, 
         ILock lock,
         JsonMapper objectMapper,
-        RedissonConfig redissonConfig) {
+        RedissonConfig redissonConfig,
+        InventorySyncClient inventorySyncClient,
+        ApplicationEventPublisher eventPublisher) {
         this.venueRepository = venueRepository;
         this.redisTemplate = redisTemplate;
         this.venueBloomFilter = venueBloomFilter;
@@ -64,6 +74,8 @@ public class VenueServiceImpl implements VenueService {
         this.lock = lock;
         this.objectMapper = objectMapper;
         this.redissonConfig = redissonConfig;
+        this.inventorySyncClient = inventorySyncClient;
+        this.eventPublisher = eventPublisher;
     }
 
     private String getCacheKey(UUID venueId) {
@@ -80,6 +92,7 @@ public class VenueServiceImpl implements VenueService {
         venue.setHostId(hostId);
         applyVenueData(venue, request);
         Venue savedVenue = venueRepository.save(venue);
+        syncTicketInventories(savedVenue.getTicketTiers());
         redisTemplate.delete(getCacheKey(savedVenue.getId()));
         venueBloomFilter.add(getCacheKey(savedVenue.getId()));
         return VenueResponse.toResponse(savedVenue);
@@ -87,18 +100,74 @@ public class VenueServiceImpl implements VenueService {
 
     @Override
     public VenueResponse updateVenue(UUID venueId, VenueUpsertRequest request, UUID hostId) {
-        Venue venue = getVenueEntityOrThrow(venueId, hostId);
-        applyVenueData(venue, request);
-        Venue updatedVenue = venueRepository.save(venue);
-        redisTemplate.delete(getCacheKey(updatedVenue.getId()));
-        return VenueResponse.toResponse(updatedVenue);
+        String updateLockKey = "lock:ticket-tier:update:" + venueId;
+        boolean locked = lock.tryLock(updateLockKey);
+        if (!locked) {
+            throw new BusinessException(HttpStatus.CONFLICT, "Venue update is in progress, please retry later");
+        }
+
+        try {
+            validateTicketTierUpdateWindow(request.getTicketTiers());
+            Venue venue = getVenueEntityOrThrow(venueId, hostId);
+            List<UUID> oldTierIds = venue.getTicketTiers().stream().map(TicketTier::getId).toList();
+            applyVenueData(venue, request);
+            Venue updatedVenue = venueRepository.save(venue);
+            syncTicketInventories(updatedVenue.getTicketTiers());
+            publishDeletedTierEvent(oldTierIds, updatedVenue.getTicketTiers().stream().map(TicketTier::getId).toList());
+            redisTemplate.delete(getCacheKey(updatedVenue.getId()));
+            return VenueResponse.toResponse(updatedVenue);
+        } finally {
+            lock.unlock(updateLockKey);
+        }
+    }
+
+    private void validateTicketTierUpdateWindow(List<TicketTierRequest> ticketTiers) {
+        if (ticketTiers == null) {
+            return;
+        }
+        OffsetDateTime now = OffsetDateTime.now();
+        for (TicketTierRequest tier : ticketTiers) {
+            if (tier.getSaleStartTime() == null) {
+                continue;
+            }
+            OffsetDateTime cutoff = tier.getSaleStartTime().minus(1, ChronoUnit.HOURS);
+            if (now.isAfter(cutoff)) {
+                throw new BusinessException(HttpStatus.BAD_REQUEST,
+                        "Ticket tier cannot be updated within one hour before sale start time");
+            }
+        }
+    }
+
+    private void syncTicketInventories(List<TicketTier> tiers) {
+        if (tiers == null) {
+            return;
+        }
+        for (TicketTier tier : tiers) {
+            inventorySyncClient.upsertInventory(tier);
+        }
     }
 
     @Override
     public void deleteVenue(UUID venueId, UUID hostId) {
         Venue venue = getVenueEntityOrThrow(venueId, hostId);
+        List<UUID> deletedTierIds = venue.getTicketTiers().stream().map(TicketTier::getId).toList();
         venueRepository.delete(venue);
+        publishDeletedTierEvent(deletedTierIds, List.of());
         redisTemplate.delete(getCacheKey(venue.getId()));
+    }
+
+    private void publishDeletedTierEvent(List<UUID> oldTierIds, List<UUID> latestTierIds) {
+        if (oldTierIds == null || oldTierIds.isEmpty()) {
+            return;
+        }
+
+        List<UUID> deletedTierIds = oldTierIds.stream()
+                .filter(id -> id != null && (latestTierIds == null || !latestTierIds.contains(id)))
+                .toList();
+
+        if (!deletedTierIds.isEmpty()) {
+            eventPublisher.publishEvent(new TicketTiersDeletedEvent(deletedTierIds));
+        }
     }
 
     private Venue getVenueEntityOrThrow(UUID venueId, UUID hostId) {
@@ -130,12 +199,13 @@ public class VenueServiceImpl implements VenueService {
             venue.setStatus(request.getStatus());
         }
 
-        // Clear-and-fill keeps orphanRemoval effective for ticket tier updates.
-        venue.getTicketTiers().clear();
+        // Keep both sides of the association consistent for orphan removal.
+        venue.clearTicketTiers();
         if (request.getTicketTiers() != null) {
-            venue.getTicketTiers().addAll(request.getTicketTiers().stream()
-                    .map(TicketTierRequest::toEntity)
-                    .collect(Collectors.toList()));
+            for (TicketTierRequest tierRequest : request.getTicketTiers()) {
+                TicketTier tier = TicketTierRequest.toEntity(tierRequest);
+                venue.addTicketTier(tier);
+            }
         }
     }
 
@@ -161,59 +231,54 @@ public class VenueServiceImpl implements VenueService {
     }
 
     
-    // get from redis
-    // if not null and not expired, return it
-    // if null
-        // check bloom filter
-            // if not exist, throw not found
-            // if exist, continue
-    // request lock
-        // if not acquired, return null/old data
-        // if acquired, query db, set cache, release lock, return result
+    // Read from Redis first.
+    // If value exists and is not logically expired, return it.
+    // If value is missing, check bloom filter before attempting database fallback.
+    // Use a distributed lock to prevent cache breakdown under concurrency.
     private Venue getVenueWithCache(UUID venueId) {
         String key = getCacheKey(venueId);
         log.debug("testing cache for venue");
         
-        // 1. 从 Redis 获取
+        // 1. Read from Redis.
         String json = redisTemplate.opsForValue().get(key);
         
-        // 2. 命中判断
+        // 2. Handle cache hit.
         if (StringUtils.hasText(json)) {
             log.debug("Cache hit");
             RedisData<Venue> redisData = readRedisData(json);
             Venue venue = redisData.getData();
             LocalDateTime expireTime = redisData.getExpireTime();
             
-            // 2.1 未逻辑过期，直接返回
+            // 2.1 Return directly when not logically expired.
             if (expireTime.isAfter(LocalDateTime.now())) {
                 return venue;
             }
-            // 2.2 已过期，准备进入加锁逻辑（尝试更新）
+            // 2.2 Continue into lock flow if logically expired.
         } else {
-            // 3. 缓存为空，检查布隆过滤器
+            // 3. Cache miss, check bloom filter.
             if (!venueBloomFilter.contains(key)) {
                 log.debug("Bloom filter negative for key: {}", key);
                 throw new BusinessException(HttpStatus.NOT_FOUND, "Venue not found: " + venueId);
             }
-            // 布隆过滤器说存在，准备加锁去查 DB
+            // Bloom filter indicates possible existence, continue to lock and DB fallback.
         }
 
-        // 4. 获取互斥锁
+        // 4. Acquire lock.
         String lockKey = getLockKey(venueId);
         boolean isLock = lock.tryLock(lockKey);
         
         try {
             if (!isLock) {
-                // 4.1 获取锁失败
+                // 4.1 Lock not acquired.
                 log.debug("Failed to acquire lock for venue: {}", venueId);
                 if (StringUtils.hasText(json)) {
-                    // 如果是逻辑过期，返回旧数据
+                    // Return stale data when the cached entry was logically expired.
                     return readRedisData(json).getData();
                 }
                 throw new BusinessException(HttpStatus.NOT_FOUND, "Venue not found: " + venueId);
             }
 
-            // 4.2 获取锁成功，Double Check (再次检查缓存，防止重复查库)
+            // 4.2 Lock acquired. A second cache check can be enabled if needed.
             // String latestJson = redisTemplate.opsForValue().get(key);
             // if (StringUtils.hasText(latestJson)) {
             //     RedisData<Venue> latestData = readRedisData(latestJson);
@@ -222,7 +287,7 @@ public class VenueServiceImpl implements VenueService {
             //     }
             // }
 
-            // 5. 同步查询数据库
+            // 5. Query the database.
             log.debug("Querying database for venue: {}", venueId);
             Optional<Venue> venueOptional = venueRepository.findById(venueId);
             if (venueOptional.isEmpty()) {
@@ -230,13 +295,13 @@ public class VenueServiceImpl implements VenueService {
                 throw new BusinessException(HttpStatus.NOT_FOUND, "Venue not found: " + venueId);
             }
 
-            // 6. 数据库搜到了，正常写入逻辑过期缓存
+            // 6. Write entity into logical-expiration cache.
             Venue venue = venueOptional.get();        
             saveToCache(key, venue);
             return venue;
 
         } finally {
-            // 7. 释放锁
+            // 7. Release lock.
             if (isLock) {
                 lock.unlock(lockKey);
             }
@@ -248,14 +313,13 @@ public class VenueServiceImpl implements VenueService {
     }
 
     private <T> void saveToCache(String key, T value, long baseLogicExpireMinute) {
-        // 使用随机增加过期时间，防止雪崩
-        // 假设基础逻辑过期时间为 30 分钟，随机增加 1-10 分钟
+        // Add random jitter to logical expiration to reduce stampede risk.
         long randomMinutes = random.nextLong(1, 10);
         RedisData<T> data = new RedisData<>();
         data.setData(value);
         data.setExpireTime(LocalDateTime.now().plusMinutes(baseLogicExpireMinute + randomMinutes));
         
-        // 逻辑过期通常不设置物理 TTL，或者设置一个远大于逻辑时间的 TTL（如 1 天）
+        // Keep a large physical TTL while relying on logical expiration.
         redisTemplate.opsForValue().set(key, objectMapper.writeValueAsString(data), 1, TimeUnit.DAYS);
         
     }

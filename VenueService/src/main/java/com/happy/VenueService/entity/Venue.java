@@ -17,11 +17,9 @@ import com.happy.VenueService.util.UUID.IdGeneratorProvider;
 
 
 /*
-在 VenueGo 这种应用中，用户经常会查询“我附近 5 公里的演出”。
-
-我在 latitude 和 longitude 上建立了复合索引。
-
-建立了 city_code 索引。因为跨城市的距离计算量大且无意义，通常先通过 city_code 缩小范围。
+Users commonly query nearby events in VenueGo.
+This model keeps a composite index on latitude/longitude and an index on city_code.
+In practice, city filtering is applied before distance calculations to reduce query cost.
 */
 @Data
 @NoArgsConstructor
@@ -30,13 +28,13 @@ import com.happy.VenueService.util.UUID.IdGeneratorProvider;
     @Index(name = "idx_venue_host", columnList = "host_id"),
     @Index(name = "idx_venue_city", columnList = "city_code"),
     @Index(name = "idx_venue_coords", columnList = "latitude, longitude"),
-    @Index(name = "idx_start_time", columnList = "start_time") // 增加时间索引优化排序
+    @Index(name = "idx_start_time", columnList = "start_time") // Add time index to improve sorting.
 })
 public class Venue {
 
     @Id
     @JdbcTypeCode(SqlTypes.BINARY)
-    @Column(columnDefinition = "BINARY(16)") // UUID 在 MySQL 中存为 BINARY(16) 性能最高
+    @Column(columnDefinition = "BINARY(16)") // Store UUID as BINARY(16) for MySQL performance.
     private UUID id;
 
     @Column(nullable = false, length = 100)
@@ -64,7 +62,7 @@ public class Venue {
     @Column(name = "capacity")
     private Integer capacity;
 
-    // --- 活动特有属性合并至此 ---
+    // Event-specific properties.
     
     @Column(name = "start_time")
     private OffsetDateTime startTime;
@@ -73,20 +71,19 @@ public class Venue {
     private OffsetDateTime endTime;
 
     @Column(name = "poster_url")
-    private String posterUrl; // 海报地址
+    private String posterUrl; // Poster image URL.
 
     @Enumerated(EnumType.STRING)
     private VenueStatus status = VenueStatus.UPCOMING;
 
     /**
-     * 票档嵌套：使用 @ElementCollection 或 @OneToMany
-     * 这里推荐 @OneToMany 配合 orphanRemoval，方便在后台管理端直接增删票档
+        * Ticket tiers are stored with a one-to-many relation.
+        * orphanRemoval allows direct tier add/delete in management flows.
      */
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
-    @JoinColumn(name = "venue_id") // 在 ticket_tiers 表中生成外键
+    @OneToMany(mappedBy = "venue", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     private List<TicketTier> ticketTiers = new ArrayList<>();
 
-    // --- 审计字段 ---
+        // Audit fields.
 
     @Column(name = "created_at", updatable = false)
     private OffsetDateTime createdAt;
@@ -96,7 +93,7 @@ public class Venue {
 
     @PrePersist
     protected void onCreate() {
-        // 使用 uuid-creator 生成时间有序的 UUID v7
+        // Generate UUID according to the configured strategy
         if (this.id == null) {
             this.id = IdGeneratorProvider.generateId();
         }
@@ -107,5 +104,20 @@ public class Venue {
     @PreUpdate
     protected void onUpdate() {
         this.updatedAt = OffsetDateTime.now(ZoneOffset.UTC);
+    }
+
+    public void addTicketTier(TicketTier tier) {
+        if (tier == null) {
+            return;
+        }
+        this.ticketTiers.add(tier);
+        tier.setVenue(this);
+    }
+
+    public void clearTicketTiers() {
+        for (TicketTier tier : this.ticketTiers) {
+            tier.setVenue(null);
+        }
+        this.ticketTiers.clear();
     }
 }

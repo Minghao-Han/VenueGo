@@ -76,6 +76,7 @@ public class VenueResponse {
                                 .tierName(tier.getTierName())
                                 .price(tier.getPrice())
                                 .totalCapacity(tier.getTotalCapacity())
+                                .purchaseLimit(tier.getPurchaseLimit())
                             .saleStartTime(tier.getSaleStartTime())
                             .saleEndTime(tier.getSaleEndTime())
                                 .build())

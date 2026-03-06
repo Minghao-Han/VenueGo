@@ -24,6 +24,8 @@ public class TicketTierResponse {
     private BigDecimal price;
     @Schema(description = "Tier capacity")
     private Integer totalCapacity;
+    @Schema(description = "Per-user purchase limit")
+    private Integer purchaseLimit;
     @Schema(description = "Sale start time in ISO-8601 with offset")
     private OffsetDateTime saleStartTime;
     @Schema(description = "Sale end time in ISO-8601 with offset")

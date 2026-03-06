@@ -12,18 +12,18 @@ input VenueFilter {
 }
 
 type Query {
-    # 1. 根据 ID 查询详情 (直接 B+ 树主键查找，性能最高)
-    # 无论 filter 增加多少字段，此接口签名始终不动
+    # 1. Query venue details by ID (primary-key lookup, highest performance).
+    # This endpoint signature stays stable even if filter fields evolve.
     venueById(id: ID!): Venue
 
-    # 2. 用户端：基于游标的高性能分页
+    # 2. Client-facing cursor-based pagination.
     venuesConnection(
         first: Int = 10, 
         after: String, 
         filter: VenueFilter
     ): VenueConnection
 
-    # 3. 管理端：基于偏移量的跳转分页
+    # 3. Admin-facing offset pagination.
     #venuesPage(
     #    limit: Int = 10, 
     #    offset: Int = 0, 
@@ -67,6 +67,7 @@ type TicketTier {
     tierName: String!
     price: Float!
     totalCapacity: Int!
+    purchaseLimit: Int!
     saleStartTime: DateTime
     saleEndTime: DateTime
 }

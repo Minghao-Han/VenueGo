@@ -7,9 +7,13 @@ import java.util.UUID;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
 import lombok.Data;
@@ -23,23 +27,31 @@ public class TicketTier {
 
     @Id
     @JdbcTypeCode(SqlTypes.BINARY)
-    @Column(columnDefinition = "BINARY(16)") // UUID 在 MySQL 中存为 BINARY(16) 性能最高
+    @Column(columnDefinition = "BINARY(16)") // Store UUID as BINARY(16) for MySQL performance.
     private UUID id;
 
     @Column(nullable = false)
-    private String tierName; // 例如："VIP", "早鸟票", "现场票"
+    private String tierName; // Examples: VIP, Early Bird, Regular.
 
     @Column(nullable = false)
-    private BigDecimal price; // 价格建议使用 BigDecimal
+    private BigDecimal price; // BigDecimal is preferred for money values.
 
     @Column(nullable = false)
-    private Integer totalCapacity; // 总库存
+    private Integer totalCapacity; // Total inventory capacity.
+
+    @Column(nullable = false)
+    private Integer purchaseLimit; // Per-user purchase limit.
 
     @Column(name = "sale_start_time")
     private OffsetDateTime saleStartTime;
 
     @Column(name = "sale_end_time")
     private OffsetDateTime saleEndTime;
+
+    @JsonIgnore
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "venue_id", nullable = false)
+    private Venue venue;
 
     @PrePersist
     protected void onCreate() {

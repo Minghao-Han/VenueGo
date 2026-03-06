@@ -14,9 +14,9 @@ public class RedissonRemoteLock implements ILock {
     }
     @Override
     public boolean tryLock(String key) {
-        // 1. 获取锁对象（这只是一个标识，还没加锁）
+        // 1. Resolve lock handle (identifier only, not acquired yet).
         RLock lock = redissonClient.getLock(key);
-        // 2. 尝试获取锁
+        // 2. Try to acquire lock.
         return lock.tryLock();
     }
     @Override

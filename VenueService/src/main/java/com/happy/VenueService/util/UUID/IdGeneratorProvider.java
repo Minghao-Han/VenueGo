@@ -15,7 +15,7 @@ public class IdGeneratorProvider {
 
     public static UUID generateId() {
         if (strategy == null) {
-            throw new IllegalStateException("IdGeneratorStrategy 仍未初始化！请检查 IdGeneratorConfig 是否成功创建了 Bean。");
+            throw new IllegalStateException("IdGeneratorStrategy is not initialized. Check whether IdGeneratorConfig created the bean.");
         }
         return strategy.generateId();
     }

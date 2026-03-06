@@ -11,12 +11,12 @@ import com.happy.VenueService.entity.Venue;
 
 import jakarta.persistence.criteria.Join;
 
-// 1. 定义积木
+// Specification building blocks.
 public class VenueSpecifications {
 	public static Specification<Venue> hasCity(String city) {
-			// root: 代表 Venue 表。root.get("cityCode") 获取表里的 city_code 列
-	    // cb (CriteriaBuilder): 查询工厂。equal 方法创建“等于”逻辑
-	    // 相当于 SQL: WHERE city_code = 'SHANGHAI'
+			// root points to Venue; root.get("cityCode") maps to the city_code column.
+	    // cb (CriteriaBuilder) creates predicates such as equality.
+	    // Equivalent SQL: WHERE city_code = 'SHANGHAI'
 	    return (root, query, cb) -> 
 	        (city == null || city.isEmpty()) ? null : cb.equal(root.get("cityCode"), city);
 	}
@@ -24,10 +24,10 @@ public class VenueSpecifications {
 	public static Specification<Venue> minPriceGreaterThan(BigDecimal minPrice) {
 	    return (root, query, cb) -> {
 	            if (minPrice == null) return null;
-	            // join: 因为价格在 TicketTier 表中，我们需要关联查询
-	            // 这行代码告诉 JPA：请把 Venue 表和它的 ticketTiers 集合关联（INNER JOIN）
+	            // Price is stored on TicketTier, so a join is required.
+	            // This produces an inner join between Venue and ticketTiers.
 	            Join<Venue, TicketTier> tiers = root.join("ticketTiers");
-	            // 相当于 SQL: WHERE ticket_tiers.price >= 100.0
+	            // Equivalent SQL: WHERE ticket_tiers.price >= 100.0
 	            return cb.greaterThanOrEqualTo(tiers.get("price"), minPrice);
 	    };
 	}
@@ -61,10 +61,10 @@ public class VenueSpecifications {
 }
 // usage
 // public Window<Venue> getVenues(VenueFilter filter, ScrollPosition position) {
-//     // 动态组合所有非空条件
+//     // Dynamically combine all non-null predicates.
 //     Specification<Venue> spec = Specification.where(VenueSpecifications.hasCity(filter.getCityCode()))
 //             .and(VenueSpecifications.hasPriceBetween(filter.getMinPrice(), filter.getMaxPrice()));
-//             // .and(以后想加什么就加什么)
+//             // .and(add additional predicates when needed)
 
 //     return venueRepository.findBy(spec, q -> q.limit(10).scroll(position));
 // }

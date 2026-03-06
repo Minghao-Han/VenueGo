@@ -19,14 +19,13 @@ public class VenueGraphQLController {
 
     private final VenueService venueService;
 
-    // 构造红注入 Service
+    // Constructor injection for service dependency.
     public VenueGraphQLController(VenueService venueService) {
         this.venueService = venueService;
     }
 
     /**
-     * @Argument: 自动将 GraphQL 请求中的参数映射为 Java 对象
-     * 如果前端传了 filter: { cityCode: "SH" }，Spring 会自动填充到 VenueFilter 对象里
+     * @Argument automatically maps GraphQL request arguments into Java objects.
      */
     @QueryMapping
     public VenueConnection venuesConnection(
@@ -35,13 +34,11 @@ public class VenueGraphQLController {
             @Argument VenueFilter filter) {
         
         // handle cursor (ScrollPosition)
-        // 如果 after 为空，说明是第一页；如果不为空，解析为基于 ID 的游标
-        // if after is null, it means it is requesting the first page; if not, parse it to a cursor based on ID
+        // If after is null, request the first page; otherwise parse it as an ID-based cursor.
         ScrollPosition position = (after != null) 
             ? ScrollPosition.forward(Collections.singletonMap("id", UUID.fromString(after)))
             : ScrollPosition.offset();
-        // 调用 Service 执行带 Specification 的查询
-        // 显式组装 GraphQL Connection，确保 pageInfo 非空并匹配 schema。
+        // Execute filtered query in service and assemble GraphQL connection response.
         Window<Venue> window = venueService.getVenues(filter, position, first);
         List<VenueEdge> edges = window.getContent().stream()
                 .map(venue -> new VenueEdge(venue.getId().toString(), venue))
