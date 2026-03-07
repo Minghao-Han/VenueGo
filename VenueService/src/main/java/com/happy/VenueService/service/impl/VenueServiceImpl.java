@@ -32,6 +32,7 @@ import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import org.redisson.api.RBloomFilter;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.ScrollPosition;
 import org.springframework.data.domain.Sort;
@@ -46,6 +47,7 @@ import org.springframework.util.StringUtils;
 @Service
 @Transactional
 @Slf4j
+@ConditionalOnProperty(prefix = "venue.cache", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class VenueServiceImpl implements VenueService {
 
     private final VenueRepository venueRepository;
@@ -107,7 +109,7 @@ public class VenueServiceImpl implements VenueService {
         }
 
         try {
-            // validateTicketTierUpdateWindow(request.getTicketTiers());
+            validateTicketTierUpdateWindow(request.getTicketTiers());
             Venue venue = getVenueEntityOrThrow(venueId, hostId);
             List<UUID> oldTierIds = venue.getTicketTiers().stream().map(TicketTier::getId).toList();
             applyVenueData(venue, request);
@@ -241,19 +243,33 @@ public class VenueServiceImpl implements VenueService {
         
         // 1. Read from Redis.
         String json = redisTemplate.opsForValue().get(key);
+        RedisData<Venue> cachedData = null;
         
         // 2. Handle cache hit.
         if (StringUtils.hasText(json)) {
             log.debug("Cache hit");
-            RedisData<Venue> redisData = readRedisData(json);
-            Venue venue = redisData.getData();
-            LocalDateTime expireTime = redisData.getExpireTime();
-            
-            // 2.1 Return directly when not logically expired.
-            if (expireTime.isAfter(LocalDateTime.now())) {
-                return venue;
+            try {
+                cachedData = readRedisData(json);
+            } catch (Exception ex) {
+                // Backward compatibility for legacy malformed cache values (e.g. data="").
+                log.warn("Invalid venue cache payload, fallback to DB, key={}", key, ex);
+                redisTemplate.delete(key);
+                cachedData = null;
             }
-            // 2.2 Continue into lock flow if logically expired.
+
+            if (cachedData != null) {
+                Venue venue = cachedData.getData();
+                LocalDateTime expireTime = cachedData.getExpireTime();
+            
+                // 2.1 Return directly when not logically expired.
+                if (expireTime.isAfter(LocalDateTime.now())) {
+                    if (venue == null) {
+                        throw new BusinessException(HttpStatus.NOT_FOUND, "Venue not found: " + venueId);
+                    }
+                    return venue;
+                }
+                // 2.2 Continue into lock flow if logically expired.
+            }
         } else {
             // 3. Cache miss, check bloom filter.
             if (!venueBloomFilter.contains(key)) {
@@ -271,9 +287,12 @@ public class VenueServiceImpl implements VenueService {
             if (!isLock) {
                 // 4.1 Lock not acquired.
                 log.debug("Failed to acquire lock for venue: {}", venueId);
-                if (StringUtils.hasText(json)) {
+                if (cachedData != null) {
                     // Return stale data when the cached entry was logically expired.
-                    return readRedisData(json).getData();
+                    Venue staleVenue = cachedData.getData();
+                    if (staleVenue != null) {
+                        return staleVenue;
+                    }
                 }
                 throw new BusinessException(HttpStatus.NOT_FOUND, "Venue not found: " + venueId);
             }
@@ -291,7 +310,7 @@ public class VenueServiceImpl implements VenueService {
             log.debug("Querying database for venue: {}", venueId);
             Optional<Venue> venueOptional = venueRepository.findById(venueId);
             if (venueOptional.isEmpty()) {
-                saveToCache(key,"",10);
+                saveToCache(key, null, 10);
                 throw new BusinessException(HttpStatus.NOT_FOUND, "Venue not found: " + venueId);
             }
 

@@ -66,9 +66,14 @@ logging:
     root: INFO
     org.hibernate.SQL: INFO
     org.hibernate.orm.jdbc.bind: INFO
+    # com.happy.VenueService.service.impl: DEBUG
 
 bloom-filter:
   venue:
     name: "venue:bloom:filter"          
     expected-insertions: 1000000        
     false-probability: 0.03
+
+venue:
+  cache:
+    enabled: true
