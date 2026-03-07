@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: venuego.order
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://mysql-dev:3306/venuego?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=utf8&allowPublicKeyRetrieval=true
+    username: root
+    password: 4445566
+  data:
+    redis:
+      host: redis-dev
+      port: 6379
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+  type-aliases-package: com.ticketing.order.domain.order.aggregate
+
+rocketmq:
+  name-server: rocketmq-namesrv:9876
+  producer:
+    group: order-producer-group
+    send-message-timeout: 3000
+
+app:
+  order:
+    pay-timeout-minutes: 15
+    timeout-topic: order_timeout_topic
+    timeout-consumer-group: order-timeout-consumer-group
+    pay-callback-topic: pay_callback_topic
+    pay-callback-consumer-group: pay-callback-consumer-group
+    idempotent-key-ttl-seconds: 86400
+    idempotent-key-prefix: "order:idempotent:"
+    optimistic-lock-max-retries: 3
+    payment:
+      query-url: ${PAYMENT_QUERY_URL}
+      query-timeout-ms: 3000
+
+server:
+  port: 6239

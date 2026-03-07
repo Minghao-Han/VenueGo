@@ -3,10 +3,16 @@
     "configurations": [
         {
             "type": "java",
-            "name": "TicketingServiceApplication",
+            "name": "OrderServiceApplication",
             "request": "launch",
-            "mainClass": "com.happy.TicketingService.TicketingServiceApplication",
-            "projectName": "TicketingService"
+            "mainClass": "com.ticketing.order.OrderServiceApplication",
+            "projectName": "order-service"
+        },
+        {
+            "type": "java",
+            "name": "OrderServiceApplication",
+            "request": "launch",
+            "mainClass": "main.java.com.ticketing.order.OrderServiceApplication"
         },
         {
             "type": "java",
