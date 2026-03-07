@@ -50,7 +50,7 @@ docker run -d \
   -p 10909:10909 \
   -p 10912:10912 \
   -e "NAMESRV_ADDR=rmqnamesrv:9876" \
-  -v BROKER_CONFIG:/home/rocketmq/rocketmq-5.3.2/conf/broker.conf \
+  -v $BROKER_CONFIG:/home/rocketmq/rocketmq-5.3.2/conf/broker.conf \
   $IMAGE sh mqbroker \
   -c /home/rocketmq/rocketmq-5.3.2/conf/broker.conf
 
