@@ -1,6 +1,28 @@
 #!/bin/bash
 #run with： 'source run.sh' or '. run.sh'
 
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+
+SERVICE_DIRS=(
+	"AuthService"
+	"CheckInService"
+	"OrderService"
+	"TicketingService"
+	"UserService"
+	"VenueService"
+)
+
+for service in "${SERVICE_DIRS[@]}"; do
+	chmod +x "$PROJECT_ROOT/$service/build.sh"
+done
+
+for service in "${SERVICE_DIRS[@]}"; do
+	"$PROJECT_ROOT/$service/build.sh"
+done
+
 
 kubectl="minikube kubectl --"
 # 1. 启动你的微服务 (Echo Server)
