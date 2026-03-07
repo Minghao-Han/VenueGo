@@ -4,6 +4,8 @@
 APP_NAME="ticketing-service"
 IMAGE_NAME="ticketing-service"
 TAG="v1"
+REGISTRY="localhost:5000"
+FULL_IMAGE="${REGISTRY}/${IMAGE_NAME}:${TAG}"
 
 echo "🚀 开始部署 ${APP_NAME}..."
 
@@ -23,3 +25,17 @@ if [ $? -ne 0 ]; then
     echo "❌ 镜像构建失败，请检查 Dockerfile！"
     exit 1
 fi
+
+# --- 5. 打本地仓库标签并推送 ---
+echo "🏷️  正在打标签 ${FULL_IMAGE}..."
+docker tag ${IMAGE_NAME}:${TAG} ${FULL_IMAGE}
+
+echo "📤 正在推送 ${FULL_IMAGE}..."
+docker push ${FULL_IMAGE}
+
+if [ $? -ne 0 ]; then
+    echo "❌ 镜像推送失败，请检查本地仓库是否可用（${REGISTRY}）。"
+    exit 1
+fi
+
+echo "✅ 构建并推送完成: ${FULL_IMAGE}"
