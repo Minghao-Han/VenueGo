@@ -1,0 +1,42 @@
+# 启用 JWT 校验
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: jwt-auth
+plugin: jwt
+config:
+  key_claim_name: iss
+---
+# 在 JWT 校验后提取 sub 字段并写入 Header
+apiVersion: configuration.konghq.com/v1
+kind: KongPlugin
+metadata:
+  name: inject-userid-post
+plugin: post-function
+config:
+  access:
+    - |
+      local auth = kong.request.get_header("authorization") or ""
+      local payload_b64 = auth:match("[Bb]earer%s+[^.]+%.([^.]+)%.")
+
+      if not payload_b64 then
+        kong.log.warn("inject-userid-post: sub claim not found")
+        return
+      end
+
+      local normalized = payload_b64:gsub("-", "+"):gsub("_", "/")
+      local pad = ({ [0] = "", [2] = "==", [3] = "=" })[#normalized % 4]
+      if not pad then
+        kong.log.warn("inject-userid-post: sub claim not found")
+        return
+      end
+
+      local payload_json = ngx and ngx.decode_base64 and ngx.decode_base64(normalized .. pad)
+      local sub = payload_json and payload_json:match('"sub"%s*:%s*"([^"]+)"')
+
+      if sub and sub ~= "" then
+        kong.service.request.set_header("X-User-Id", tostring(sub))
+        kong.log.notice("inject-userid-post: sub extracted")
+      else
+        kong.log.warn("inject-userid-post: sub claim not found")
+      end

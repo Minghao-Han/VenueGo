@@ -1,0 +1,31 @@
+# 01-apps/services.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: test-echo
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: echo
+  template:
+    metadata:
+      labels:
+        app: echo
+    spec:
+      containers:
+      - name: echo-server
+        image: ealen/echo-server:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: test-echo-service
+spec:
+  selector:
+    app: echo
+  ports:
+  - port: 80
+    targetPort: 80

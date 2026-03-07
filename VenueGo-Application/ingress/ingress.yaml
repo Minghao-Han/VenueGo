@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: test-ingress
+  annotations:
+    konghq.com/plugins: jwt-auth,inject-userid-post
+spec:
+  ingressClassName: kong
+  rules:
+  - http:
+      paths:
+      - path: /echo
+        pathType: Prefix
+        backend:
+          service:
+            name: test-echo-service
+            port:
+              number: 80

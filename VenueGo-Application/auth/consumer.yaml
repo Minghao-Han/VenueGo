@@ -1,0 +1,10 @@
+apiVersion: configuration.konghq.com/v1
+kind: KongConsumer
+metadata:
+  name: auth-service-consumer
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.class: kong
+username: auth-server
+credentials:
+  - test-user-jwt-secret  # 这里的名字必须对应上面 Secret 的 metadata.name
