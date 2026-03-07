@@ -1,4 +1,388 @@
-# 01-apps/services.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql-dev
+  template:
+    metadata:
+      labels:
+        app: mysql-dev
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.0
+          imagePullPolicy: IfNotPresent
+          args:
+            - --default-authentication-plugin=mysql_native_password
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: "4445566"
+            - name: MYSQL_DATABASE
+              value: venuego
+            - name: TZ
+              value: UTC
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-dev
+spec:
+  selector:
+    app: mysql-dev
+  ports:
+    - name: mysql
+      port: 3306
+      targetPort: 3306
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: redis-dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: redis-dev
+  template:
+    metadata:
+      labels:
+        app: redis-dev
+    spec:
+      containers:
+        - name: redis
+          image: redis:7.2-alpine
+          imagePullPolicy: IfNotPresent
+          command:
+            - redis-server
+            - --appendonly
+            - "yes"
+          ports:
+            - containerPort: 6379
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-dev
+spec:
+  selector:
+    app: redis-dev
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rmqnamesrv
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rmqnamesrv
+  template:
+    metadata:
+      labels:
+        app: rmqnamesrv
+    spec:
+      containers:
+        - name: rmqnamesrv
+          image: apache/rocketmq:5.3.2
+          imagePullPolicy: IfNotPresent
+          command: ["sh", "mqnamesrv"]
+          ports:
+            - containerPort: 9876
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rmqnamesrv
+spec:
+  selector:
+    app: rmqnamesrv
+  ports:
+    - name: namesrv
+      port: 9876
+      targetPort: 9876
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # Alias for configs using rocketmq-namesrv:9876
+  name: rocketmq-namesrv
+spec:
+  selector:
+    app: rmqnamesrv
+  ports:
+    - name: namesrv
+      port: 9876
+      targetPort: 9876
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rmq-broker-conf
+data:
+  broker.conf: |
+    brokerClusterName=DefaultCluster
+    brokerName=broker-a
+    brokerId=0
+    brokerIP1=rmqbroker
+    namesrvAddr=rmqnamesrv:9876
+    autoCreateTopicEnable=true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rmqbroker
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rmqbroker
+  template:
+    metadata:
+      labels:
+        app: rmqbroker
+    spec:
+      containers:
+        - name: rmqbroker
+          image: apache/rocketmq:5.3.2
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: NAMESRV_ADDR
+              value: rmqnamesrv:9876
+          command:
+            - sh
+            - mqbroker
+            - -c
+            - /home/rocketmq/rocketmq-5.3.2/conf/broker.conf
+          ports:
+            - containerPort: 10911
+            - containerPort: 10909
+            - containerPort: 10912
+          volumeMounts:
+            - name: rmq-broker-conf
+              mountPath: /home/rocketmq/rocketmq-5.3.2/conf/broker.conf
+              subPath: broker.conf
+      volumes:
+        - name: rmq-broker-conf
+          configMap:
+            name: rmq-broker-conf
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rmqbroker
+spec:
+  selector:
+    app: rmqbroker
+  ports:
+    - name: broker-remoting
+      port: 10911
+      targetPort: 10911
+    - name: broker-ha
+      port: 10909
+      targetPort: 10909
+    - name: broker-fast-remoting
+      port: 10912
+      targetPort: 10912
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: auth-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: auth-service
+  template:
+    metadata:
+      labels:
+        app: auth-service
+    spec:
+      containers:
+        - name: auth-service
+          image: auth-service:v1
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 6235
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+spec:
+  selector:
+    app: auth-service
+  ports:
+    - name: http
+      port: 6235
+      targetPort: 6235
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+        - name: user-service
+          image: user-service:v1
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 6238
+            - containerPort: 9090
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+---
+apiVersion: v1
+kind: Service
+metadata:
+  # Keep this name to match AuthService gRPC target: static://my-user-app:9090
+  name: my-user-app
+spec:
+  selector:
+    app: user-service
+  ports:
+    - name: http
+      port: 6238
+      targetPort: 6238
+    - name: grpc
+      port: 9090
+      targetPort: 9090
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: venue-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: venue-service
+  template:
+    metadata:
+      labels:
+        app: venue-service
+    spec:
+      containers:
+        - name: venue-service
+          image: venue-service:v1
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 6236
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: venue-service
+spec:
+  selector:
+    app: venue-service
+  ports:
+    - name: http
+      port: 6236
+      targetPort: 6236
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ticketing-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ticketing-service
+  template:
+    metadata:
+      labels:
+        app: ticketing-service
+    spec:
+      containers:
+        - name: ticketing-service
+          image: ticketing-service:v1
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 6240
+            - containerPort: 9240
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ticketing-service
+spec:
+  selector:
+    app: ticketing-service
+  ports:
+    - name: http
+      port: 6240
+      targetPort: 6240
+    - name: grpc
+      port: 9240
+      targetPort: 9240
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: checkin-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: checkin-service
+  template:
+    metadata:
+      labels:
+        app: checkin-service
+    spec:
+      containers:
+        - name: checkin-service
+          image: checkin-service:v1
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 6237
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: prod
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: checkin-service
+spec:
+  selector:
+    app: checkin-service
+  ports:
+    - name: http
+      port: 6237
+      targetPort: 6237
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -14,10 +398,11 @@ spec:
         app: echo
     spec:
       containers:
-      - name: echo-server
-        image: ealen/echo-server:latest
-        ports:
-        - containerPort: 80
+        - name: echo-server
+          image: ealen/echo-server:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 80
 ---
 apiVersion: v1
 kind: Service
@@ -27,5 +412,6 @@ spec:
   selector:
     app: echo
   ports:
-  - port: 80
-    targetPort: 80
+    - name: http
+      port: 80
+      targetPort: 80
