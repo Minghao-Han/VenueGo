@@ -62,6 +62,13 @@ spec:
                 name: checkin-service
                 port:
                   number: 6237
+          - path: /orders
+            pathType: Prefix
+            backend:
+              service:
+                name: order-service
+                port:
+                  number: 6239
           - path: /echo
             pathType: Prefix
             backend:

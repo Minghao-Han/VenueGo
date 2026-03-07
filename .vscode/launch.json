@@ -5,6 +5,12 @@
             "type": "java",
             "name": "OrderServiceApplication",
             "request": "launch",
+            "mainClass": "com.ticketing.order.OrderServiceApplication"
+        },
+        {
+            "type": "java",
+            "name": "OrderServiceApplication",
+            "request": "launch",
             "mainClass": "com.ticketing.order.OrderServiceApplication",
             "projectName": "order-service"
         },
