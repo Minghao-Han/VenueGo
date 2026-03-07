@@ -20,7 +20,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update   # 本地开发：自动根据实体类创建/更新表结构；生产建议 validate + Flyway
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
