@@ -1,11 +1,13 @@
 package com.ticketing.order.common.response;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Data;
 
 /**
  * Unified response wrapper for all REST API endpoints
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Data
 public class Response<T> {
 
     private static final String SUCCESS_CODE = "0000";
@@ -21,30 +23,6 @@ public class Response<T> {
     public Response(String code, String message, T data) {
         this.code = code;
         this.message = message;
-        this.data = data;
-    }
-
-    public String getCode() {
-        return code;
-    }
-
-    public void setCode(String code) {
-        this.code = code;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
-    }
-
-    public T getData() {
-        return data;
-    }
-
-    public void setData(T data) {
         this.data = data;
     }
 

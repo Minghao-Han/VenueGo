@@ -5,21 +5,18 @@ import com.ticketing.order.app.service.OrderCommandService;
 import com.ticketing.order.infrastructure.idempotent.IdempotentChecker;
 import com.ticketing.order.infrastructure.repository.OrderRepository;
 import com.ticketing.order.domain.order.aggregate.OrderAggregate;
-import com.ticketing.order.domain.order.enums.OrderEvent;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
-import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.springframework.stereotype.Component;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 
 import com.ticketing.order.common.config.AppProperties;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import java.math.BigDecimal;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -32,9 +29,8 @@ import java.util.Optional;
  * - CANCELLED + PAY -> REFUNDING (late payment after user cancellation)
  */
 @Component
+@Slf4j
 public class PayCallbackConsumer {
-
-    private static final Logger log = LoggerFactory.getLogger(PayCallbackConsumer.class);
 
     private final OrderRepository orderRepository;
     private final OrderCommandService orderCommandService;
@@ -59,10 +55,7 @@ public class PayCallbackConsumer {
 
     @PostConstruct
     public void init() throws Exception {
-        String nameServer = System.getenv("ROCKETMQ_NAME_SERVER");
-        if (nameServer == null || nameServer.trim().isEmpty()) {
-            nameServer = "localhost:9876";
-        }
+        String nameServer = appProperties.getNameServer();
 
         consumer = new DefaultMQPushConsumer(appProperties.getPayCallbackConsumerGroup());
         consumer.setNamesrvAddr(nameServer);
@@ -145,33 +138,10 @@ public class PayCallbackConsumer {
     /**
      * DTO for payment callback message
      */
+    @Data
     public static class PaymentCallback {
         private String paymentId;
         private String orderId;
         private BigDecimal amount;
-
-        public String getPaymentId() {
-            return paymentId;
-        }
-
-        public void setPaymentId(String paymentId) {
-            this.paymentId = paymentId;
-        }
-
-        public String getOrderId() {
-            return orderId;
-        }
-
-        public void setOrderId(String orderId) {
-            this.orderId = orderId;
-        }
-
-        public BigDecimal getAmount() {
-            return amount;
-        }
-
-        public void setAmount(BigDecimal amount) {
-            this.amount = amount;
-        }
     }
 }

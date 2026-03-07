@@ -1,34 +1,35 @@
 package com.ticketing.order.infrastructure.repository.impl;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.ticketing.order.domain.order.aggregate.OrderAggregate;
 import com.ticketing.order.domain.order.enums.OrderStatus;
 import com.ticketing.order.infrastructure.repository.OrderRepository;
 import com.ticketing.order.infrastructure.repository.entity.OrderEntity;
-import com.ticketing.order.infrastructure.repository.mapper.OrderMapper;
+import com.ticketing.order.infrastructure.repository.jpa.OrderJpaRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.Optional;
-import java.util.UUID;
 
 /**
- * Default implementation of OrderRepository using MyBatis Plus
+ * Default implementation of OrderRepository using Spring Data JPA (Hibernate)
  */
 @Repository
 public class OrderRepositoryImpl implements OrderRepository {
 
     private static final Logger log = LoggerFactory.getLogger(OrderRepositoryImpl.class);
 
-    private final OrderMapper orderMapper;
+    private final OrderJpaRepository orderJpaRepository;
 
-    public OrderRepositoryImpl(OrderMapper orderMapper) {
-        this.orderMapper = orderMapper;
+    public OrderRepositoryImpl(OrderJpaRepository orderJpaRepository) {
+        this.orderJpaRepository = orderJpaRepository;
     }
 
     @Override
+    @Transactional
     public void save(OrderAggregate aggregate) {
         OrderEntity entity = aggregateToEntity(aggregate);
         entity.setId(aggregate.getOrderId());
@@ -36,53 +37,44 @@ public class OrderRepositoryImpl implements OrderRepository {
         entity.setCreatedAt(LocalDateTime.now());
         entity.setUpdatedAt(LocalDateTime.now());
 
-        int rows = this.orderMapper.insert(entity);
-        if (rows != 1) {
-            throw new RuntimeException("Failed to save order: " + aggregate.getOrderId());
-        }
+        this.orderJpaRepository.save(entity);
 
         log.debug("Order saved with ID: {}", aggregate.getOrderId());
     }
 
     @Override
     public Optional<OrderAggregate> findById(String orderId) {
-        OrderEntity entity = this.orderMapper.selectOne(
-                new LambdaQueryWrapper<OrderEntity>()
-                        .eq(OrderEntity::getId, orderId));
-
-        if (entity == null) {
-            return Optional.empty();
-        }
-
-        OrderAggregate aggregate = entityToAggregate(entity);
-        return Optional.of(aggregate);
+        return this.orderJpaRepository.findById(orderId)
+                .map(this::entityToAggregate);
     }
 
     @Override
+    @Transactional
     public boolean updateWithOptimisticLock(OrderAggregate aggregate, Integer expectedVersion) {
-        OrderEntity entity = aggregateToEntity(aggregate);
-        entity.setId(aggregate.getOrderId());
-        entity.setUpdatedAt(LocalDateTime.now());
+        Optional<OrderEntity> existingOpt = this.orderJpaRepository.findById(aggregate.getOrderId());
+        if (existingOpt.isEmpty()) {
+            return false;
+        }
 
-        // Execute optimistic lock update
-        // UPDATE orders SET status = ?, version = version + 1, ... 
-        // WHERE id = ? AND version = ? AND status = ?
-        int affectedRows = this.orderMapper.update(
-                entity,
-                new LambdaQueryWrapper<OrderEntity>()
-                        .eq(OrderEntity::getId, aggregate.getOrderId())
-                        .eq(OrderEntity::getVersion, expectedVersion));
-
-        if (affectedRows == 1) {
-            log.debug("Order updated successfully with optimistic lock: {}", aggregate.getOrderId());
-            return true;
-        } else if (affectedRows == 0) {
+        OrderEntity existing = existingOpt.get();
+        if (!expectedVersion.equals(existing.getVersion())) {
             log.warn("Optimistic lock conflict for order: {}", aggregate.getOrderId());
             return false;
-        } else {
-            throw new RuntimeException(
-                    "Unexpected affected rows: " + affectedRows
-                            + " for order: " + aggregate.getOrderId());
+        }
+
+        OrderEntity updated = aggregateToEntity(aggregate);
+        updated.setId(existing.getId());
+        updated.setVersion(existing.getVersion());
+        updated.setCreatedAt(existing.getCreatedAt());
+        updated.setUpdatedAt(LocalDateTime.now());
+
+        try {
+            this.orderJpaRepository.saveAndFlush(updated);
+            log.debug("Order updated successfully with optimistic lock: {}", aggregate.getOrderId());
+            return true;
+        } catch (OptimisticLockingFailureException ex) {
+            log.warn("Optimistic lock conflict for order: {}", aggregate.getOrderId());
+            return false;
         }
     }
 
@@ -104,7 +96,7 @@ public class OrderRepositoryImpl implements OrderRepository {
                 .paidAt(aggregate.getPaidAt())
                 .usedAt(aggregate.getUsedAt())
                 .cancelledAt(aggregate.getCancelledAt())
-                .version(aggregate.getVersion() != null ? aggregate.getVersion() + 1 : 1)
+                .version(aggregate.getVersion())
                 .build();
     }
 

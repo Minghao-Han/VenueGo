@@ -1,12 +1,10 @@
 package com.ticketing.order.infrastructure.mq;
 
 import com.ticketing.order.common.config.AppProperties;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
@@ -19,9 +17,8 @@ import jakarta.annotation.PreDestroy;
  * The message is delivered after the timeout duration.
  */
 @Component
+@Slf4j
 public class RocketMQOrderProducer {
-
-    private static final Logger log = LoggerFactory.getLogger(RocketMQOrderProducer.class);
 
     private final AppProperties appProperties;
     
@@ -33,10 +30,7 @@ public class RocketMQOrderProducer {
 
     @PostConstruct
     public void init() throws Exception {
-        String nameServer = System.getenv("ROCKETMQ_NAME_SERVER");
-        if (nameServer == null || nameServer.trim().isEmpty()) {
-            nameServer = "localhost:9876";
-        }
+        String nameServer = appProperties.getNameServer();
 
         producer = new DefaultMQProducer("order-producer-group");
         producer.setNamesrvAddr(nameServer);

@@ -1,12 +1,14 @@
 package com.ticketing.order.domain.order.event;
 
 import com.ticketing.order.domain.order.enums.OrderEvent;
+import lombok.Data;
 
 import java.math.BigDecimal;
 
 /**
  * Domain event published when order is successfully paid
  */
+@Data
 public class OrderPaidEvent extends OrderDomainEvent {
 
     private String paymentId;
@@ -21,19 +23,4 @@ public class OrderPaidEvent extends OrderDomainEvent {
         this.amount = amount;
     }
 
-    public String getPaymentId() {
-        return paymentId;
-    }
-
-    public void setPaymentId(String paymentId) {
-        this.paymentId = paymentId;
-    }
-
-    public BigDecimal getAmount() {
-        return amount;
-    }
-
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
-    }
 }

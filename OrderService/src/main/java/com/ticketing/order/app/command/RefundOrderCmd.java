@@ -1,10 +1,12 @@
 package com.ticketing.order.app.command;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
 
 /**
  * Command to refund an order
  */
+@Data
 public class RefundOrderCmd {
 
     @NotBlank(message = "Order ID is required")
@@ -24,10 +26,5 @@ public class RefundOrderCmd {
         this.reason = reason;
     }
 
-    public String getOrderId() { return orderId; }
-    public void setOrderId(String orderId) { this.orderId = orderId; }
-
-    public String getReason() { return reason; }
-    public void setReason(String reason) { this.reason = reason; }
 }
 

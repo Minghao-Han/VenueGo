@@ -3,6 +3,7 @@ package com.ticketing.order.infrastructure.payment.impl;
 import com.ticketing.order.infrastructure.payment.PaymentQueryService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 
 /**
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component;
  * Always returns UNPAID for any payment query
  */
 @Component("mockPaymentQueryService")
+@Primary
 public class MockPaymentQueryService implements PaymentQueryService {
 
     private static final Logger log = LoggerFactory.getLogger(MockPaymentQueryService.class);

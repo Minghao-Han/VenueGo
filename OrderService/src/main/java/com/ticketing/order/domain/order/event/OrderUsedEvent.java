@@ -1,10 +1,12 @@
 package com.ticketing.order.domain.order.event;
 
 import com.ticketing.order.domain.order.enums.OrderEvent;
+import lombok.Data;
 
 /**
  * Domain event published when ticket is used
  */
+@Data
 public class OrderUsedEvent extends OrderDomainEvent {
 
     private String verifyCode;
@@ -17,11 +19,4 @@ public class OrderUsedEvent extends OrderDomainEvent {
         this.verifyCode = verifyCode;
     }
 
-    public String getVerifyCode() {
-        return verifyCode;
-    }
-
-    public void setVerifyCode(String verifyCode) {
-        this.verifyCode = verifyCode;
-    }
 }

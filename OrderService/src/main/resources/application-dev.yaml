@@ -1,3 +1,6 @@
+server:
+  port: 6239
+
 spring:
   application:
     name: venuego.order
@@ -11,12 +14,14 @@ spring:
     redis:
       host: localhost
       port: 6379
-
-mybatis-plus:
-  mapper-locations: classpath:mapper/*.xml
-  configuration:
-    map-underscore-to-camel-case: true
-  type-aliases-package: com.ticketing.order.domain.order.aggregate
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
 
 rocketmq:
   name-server: localhost:9876
@@ -24,19 +29,25 @@ rocketmq:
     group: order-producer-group
     send-message-timeout: 3000
 
+grpc:
+  client:
+    venue-service:
+      address: static://localhost:9090
+      negotiationType: plaintext
+
 app:
   order:
+    name-server: localhost:9876
     pay-timeout-minutes: 15
     timeout-topic: order_timeout_topic
     timeout-consumer-group: order-timeout-consumer-group
     pay-callback-topic: pay_callback_topic
     pay-callback-consumer-group: pay-callback-consumer-group
+    purchase-topic: ticketing-purchase-success
+    purchase-consumer-group: ticketing-order-consumer
     idempotent-key-ttl-seconds: 86400
     idempotent-key-prefix: "order:idempotent:"
     optimistic-lock-max-retries: 3
     payment:
       query-url: http://localhost:8080/payment/query
       query-timeout-ms: 3000
-
-server:
-  port: 6239

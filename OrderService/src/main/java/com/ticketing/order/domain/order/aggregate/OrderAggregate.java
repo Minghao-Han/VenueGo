@@ -2,7 +2,7 @@ package com.ticketing.order.domain.order.aggregate;
 
 import com.ticketing.order.domain.order.enums.OrderStatus;
 import com.ticketing.order.domain.order.event.*;
-import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
@@ -22,6 +22,7 @@ import java.util.List;
  * - Do NOT access databases, external services, or publish to MQ
  */
 @NoArgsConstructor
+@Data
 public class OrderAggregate {
 
     // Core identity
@@ -115,40 +116,6 @@ public class OrderAggregate {
             return agg;
         }
     }
-
-    // Getters
-    public String getOrderId() { return orderId; }
-    public String getEventId() { return eventId; }
-    public String getVenueId() { return venueId; }
-    public String getTicketTypeId() { return ticketTypeId; }
-    public OrderStatus getStatus() { return status; }
-    public Integer getQuantity() { return quantity; }
-    public BigDecimal getUnitPrice() { return unitPrice; }
-    public BigDecimal getTotalAmount() { return totalAmount; }
-    public String getPaymentId() { return paymentId; }
-    public String getVerifyCode() { return verifyCode; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getPaidAt() { return paidAt; }
-    public LocalDateTime getUsedAt() { return usedAt; }
-    public LocalDateTime getCancelledAt() { return cancelledAt; }
-    public Integer getVersion() { return version; }
-
-    // Setters
-    public void setOrderId(String orderId) { this.orderId = orderId; }
-    public void setEventId(String eventId) { this.eventId = eventId; }
-    public void setVenueId(String venueId) { this.venueId = venueId; }
-    public void setTicketTypeId(String ticketTypeId) { this.ticketTypeId = ticketTypeId; }
-    public void setStatus(OrderStatus status) { this.status = status; }
-    public void setQuantity(Integer quantity) { this.quantity = quantity; }
-    public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
-    public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
-    public void setPaymentId(String paymentId) { this.paymentId = paymentId; }
-    public void setVerifyCode(String verifyCode) { this.verifyCode = verifyCode; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
-    public void setUsedAt(LocalDateTime usedAt) { this.usedAt = usedAt; }
-    public void setCancelledAt(LocalDateTime cancelledAt) { this.cancelledAt = cancelledAt; }
-    public void setVersion(Integer version) { this.version = version; }
 
     /**
      * Handle PAY command - transition to PAID state

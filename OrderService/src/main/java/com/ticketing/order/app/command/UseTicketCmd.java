@@ -1,10 +1,12 @@
 package com.ticketing.order.app.command;
 
 import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
 
 /**
  * Command to use/consume a ticket
  */
+@Data
 public class UseTicketCmd {
 
     @NotBlank(message = "Order ID is required")
@@ -21,10 +23,5 @@ public class UseTicketCmd {
         this.verifyCode = verifyCode;
     }
 
-    public String getOrderId() { return orderId; }
-    public void setOrderId(String orderId) { this.orderId = orderId; }
-
-    public String getVerifyCode() { return verifyCode; }
-    public void setVerifyCode(String verifyCode) { this.verifyCode = verifyCode; }
 }
 

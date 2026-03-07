@@ -1,7 +1,11 @@
 package com.ticketing.order.infrastructure.repository.entity;
 
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.persistence.Version;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
@@ -13,14 +17,22 @@ import java.time.LocalDateTime;
  * Includes version field for optimistic locking
  */
 @NoArgsConstructor
-@TableName("orders")
+@Data
+@Entity
+@Table(name = "orders")
 public class OrderEntity {
 
-    @TableId
+    @Id
+    @Column(name = "id")
     private String id;
 
+    @Column(name = "event_id")
     private String eventId;
+
+    @Column(name = "venue_id")
     private String venueId;
+
+    @Column(name = "ticket_type_id")
     private String ticketTypeId;
 
     // Order state
@@ -36,14 +48,23 @@ public class OrderEntity {
     private String verifyCode;
 
     // Timestamps
+    @Column(name = "created_at")
     private LocalDateTime createdAt;
+
+    @Column(name = "paid_at")
     private LocalDateTime paidAt;
+
+    @Column(name = "used_at")
     private LocalDateTime usedAt;
+
+    @Column(name = "cancelled_at")
     private LocalDateTime cancelledAt;
 
     // Optimistic lock version - incremented on every successful update
+    @Version
     private Integer version;
 
+    @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
     // Builder pattern support
@@ -108,39 +129,4 @@ public class OrderEntity {
         }
     }
 
-    // Getters
-    public String getId() { return id; }
-    public String getEventId() { return eventId; }
-    public String getVenueId() { return venueId; }
-    public String getTicketTypeId() { return ticketTypeId; }
-    public String getStatus() { return status; }
-    public Integer getQuantity() { return quantity; }
-    public BigDecimal getUnitPrice() { return unitPrice; }
-    public BigDecimal getTotalAmount() { return totalAmount; }
-    public String getPaymentId() { return paymentId; }
-    public String getVerifyCode() { return verifyCode; }
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public LocalDateTime getPaidAt() { return paidAt; }
-    public LocalDateTime getUsedAt() { return usedAt; }
-    public LocalDateTime getCancelledAt() { return cancelledAt; }
-    public Integer getVersion() { return version; }
-    public LocalDateTime getUpdatedAt() { return updatedAt; }
-
-    // Setters
-    public void setId(String id) { this.id = id; }
-    public void setEventId(String eventId) { this.eventId = eventId; }
-    public void setVenueId(String venueId) { this.venueId = venueId; }
-    public void setTicketTypeId(String ticketTypeId) { this.ticketTypeId = ticketTypeId; }
-    public void setStatus(String status) { this.status = status; }
-    public void setQuantity(Integer quantity) { this.quantity = quantity; }
-    public void setUnitPrice(BigDecimal unitPrice) { this.unitPrice = unitPrice; }
-    public void setTotalAmount(BigDecimal totalAmount) { this.totalAmount = totalAmount; }
-    public void setPaymentId(String paymentId) { this.paymentId = paymentId; }
-    public void setVerifyCode(String verifyCode) { this.verifyCode = verifyCode; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
-    public void setPaidAt(LocalDateTime paidAt) { this.paidAt = paidAt; }
-    public void setUsedAt(LocalDateTime usedAt) { this.usedAt = usedAt; }
-    public void setCancelledAt(LocalDateTime cancelledAt) { this.cancelledAt = cancelledAt; }
-    public void setVersion(Integer version) { this.version = version; }
-    public void setUpdatedAt(LocalDateTime updatedAt) { this.updatedAt = updatedAt; }
 }

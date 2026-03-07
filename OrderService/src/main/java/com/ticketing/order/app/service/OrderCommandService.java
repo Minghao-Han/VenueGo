@@ -51,6 +51,18 @@ public class OrderCommandService {
      */
     public OrderDTO createOrder(CreateOrderCmd cmd) {
         String orderId = UUID.randomUUID().toString();
+        return createOrderInternal(orderId, cmd);
+    }
+
+    /**
+     * Create a new order with a specified orderId.
+     * Used by async purchase consumer to keep cross-service orderId consistent.
+     */
+    public OrderDTO createOrderWithOrderId(String orderId, CreateOrderCmd cmd) {
+        return createOrderInternal(orderId, cmd);
+    }
+
+    private OrderDTO createOrderInternal(String orderId, CreateOrderCmd cmd) {
         String verifyCode = generateVerifyCode();
 
         BigDecimal totalAmount = cmd.getUnitPrice().multiply(

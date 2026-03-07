@@ -8,18 +8,15 @@ import com.ticketing.order.infrastructure.repository.OrderRepository;
 import com.ticketing.order.domain.order.aggregate.OrderAggregate;
 import com.ticketing.order.domain.order.enums.OrderEvent;
 import com.ticketing.order.domain.order.enums.OrderStatus;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.apache.rocketmq.client.consumer.DefaultMQPushConsumer;
-import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyContext;
 import org.apache.rocketmq.client.consumer.listener.ConsumeConcurrentlyStatus;
 import org.apache.rocketmq.client.consumer.listener.MessageListenerConcurrently;
 import org.apache.rocketmq.common.message.MessageExt;
 import org.springframework.stereotype.Component;
+import lombok.extern.slf4j.Slf4j;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -32,9 +29,8 @@ import java.util.Optional;
  * 4. Update order state with optimistic lock
  */
 @Component
+@Slf4j
 public class OrderTimeoutConsumer {
-
-    private static final Logger log = LoggerFactory.getLogger(OrderTimeoutConsumer.class);
 
     private final OrderRepository orderRepository;
     private final OrderCommandService orderCommandService;
@@ -59,10 +55,7 @@ public class OrderTimeoutConsumer {
 
     @PostConstruct
     public void init() throws Exception {
-        String nameServer = System.getenv("ROCKETMQ_NAME_SERVER");
-        if (nameServer == null || nameServer.trim().isEmpty()) {
-            nameServer = "localhost:9876";
-        }
+        String nameServer = appProperties.getNameServer();
 
         consumer = new DefaultMQPushConsumer(appProperties.getTimeoutConsumerGroup());
         consumer.setNamesrvAddr(nameServer);

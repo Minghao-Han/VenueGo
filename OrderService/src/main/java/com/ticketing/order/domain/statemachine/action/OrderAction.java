@@ -1,6 +1,7 @@
 package com.ticketing.order.domain.statemachine.action;
 
 import com.ticketing.order.domain.order.aggregate.OrderAggregate;
+import lombok.Data;
 
 /**
  * Base interface for all order state machine actions
@@ -25,6 +26,7 @@ public interface OrderAction {
     /**
      * Action context holding parameters needed for specific actions
      */
+    @Data
     class ActionContext {
         private String paymentId;
         private java.math.BigDecimal amount;
@@ -32,38 +34,6 @@ public interface OrderAction {
         private String verifyCode;
 
         public ActionContext() {
-        }
-
-        public String getPaymentId() {
-            return paymentId;
-        }
-
-        public void setPaymentId(String paymentId) {
-            this.paymentId = paymentId;
-        }
-
-        public java.math.BigDecimal getAmount() {
-            return amount;
-        }
-
-        public void setAmount(java.math.BigDecimal amount) {
-            this.amount = amount;
-        }
-
-        public String getReason() {
-            return reason;
-        }
-
-        public void setReason(String reason) {
-            this.reason = reason;
-        }
-
-        public String getVerifyCode() {
-            return verifyCode;
-        }
-
-        public void setVerifyCode(String verifyCode) {
-            this.verifyCode = verifyCode;
         }
     }
 }

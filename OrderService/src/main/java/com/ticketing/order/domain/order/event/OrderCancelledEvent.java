@@ -1,10 +1,12 @@
 package com.ticketing.order.domain.order.event;
 
 import com.ticketing.order.domain.order.enums.OrderEvent;
+import lombok.Data;
 
 /**
  * Domain event published when order is cancelled
  */
+@Data
 public class OrderCancelledEvent extends OrderDomainEvent {
 
     private String reason;
@@ -17,11 +19,4 @@ public class OrderCancelledEvent extends OrderDomainEvent {
         this.reason = reason;
     }
 
-    public String getReason() {
-        return reason;
-    }
-
-    public void setReason(String reason) {
-        this.reason = reason;
-    }
 }

@@ -6,6 +6,9 @@ import com.ticketing.order.domain.order.enums.OrderEvent;
 import com.ticketing.order.domain.order.enums.OrderStatus;
 import com.ticketing.order.domain.statemachine.action.*;
 import com.ticketing.order.domain.statemachine.condition.*;
+
+import lombok.extern.slf4j.Slf4j;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -23,9 +26,8 @@ import java.util.*;
  * The current order state is always loaded from DB before firing an event.
  */
 @Component
+@Slf4j
 public class OrderStateMachineBuilder {
-
-    private static final Logger log = LoggerFactory.getLogger(OrderStateMachineBuilder.class);
 
     /**
      * Transition definition: maps (sourceState, event) -> (targetState, condition, action)

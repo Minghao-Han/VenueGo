@@ -1,9 +1,12 @@
 package com.ticketing.order.domain.order.enums;
 
+import lombok.Getter;
+
 /**
  * Order event enumeration
  * Defines all events that can trigger state transitions
  */
+@Getter
 public enum OrderEvent {
     /**
      * Payment successful event
@@ -30,10 +33,6 @@ public enum OrderEvent {
 
     OrderEvent(String code) {
         this.code = code;
-    }
-
-    public String getCode() {
-        return code;
     }
 
     public static OrderEvent fromCode(String code) {

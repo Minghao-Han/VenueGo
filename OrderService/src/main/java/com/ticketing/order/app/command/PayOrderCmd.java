@@ -3,12 +3,14 @@ package com.ticketing.order.app.command;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import lombok.Data;
 
 import java.math.BigDecimal;
 
 /**
  * Command to pay for an order
  */
+@Data
 public class PayOrderCmd {
 
     @NotBlank(message = "Order ID is required")
@@ -30,13 +32,5 @@ public class PayOrderCmd {
         this.amount = amount;
     }
 
-    public String getOrderId() { return orderId; }
-    public void setOrderId(String orderId) { this.orderId = orderId; }
-
-    public String getPaymentId() { return paymentId; }
-    public void setPaymentId(String paymentId) { this.paymentId = paymentId; }
-
-    public BigDecimal getAmount() { return amount; }
-    public void setAmount(BigDecimal amount) { this.amount = amount; }
 }
 

@@ -1,9 +1,12 @@
 package com.ticketing.order.domain.order.enums;
 
+import lombok.Getter;
+
 /**
  * Order status enumeration
  * Defines all valid states in the order lifecycle
  */
+@Getter
 public enum OrderStatus {
     /**
      * Waiting for payment
@@ -34,10 +37,6 @@ public enum OrderStatus {
 
     OrderStatus(String code) {
         this.code = code;
-    }
-
-    public String getCode() {
-        return code;
     }
 
     public static OrderStatus fromCode(String code) {

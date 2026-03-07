@@ -3,7 +3,7 @@
 # --- 1. 配置变量 ---
 APP_NAME="order-service"
 IMAGE_NAME="order-service"
-TAG="v1"
+TAG="v2"
 REGISTRY="localhost:5000"
 FULL_IMAGE="${REGISTRY}/${IMAGE_NAME}:${TAG}"
 

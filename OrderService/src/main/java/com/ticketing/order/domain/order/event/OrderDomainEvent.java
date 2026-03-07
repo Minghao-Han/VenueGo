@@ -1,12 +1,14 @@
 package com.ticketing.order.domain.order.event;
 
 import com.ticketing.order.domain.order.enums.OrderEvent;
+import lombok.Data;
 
 import java.time.LocalDateTime;
 
 /**
  * Base class for all domain events in order aggregate
  */
+@Data
 public abstract class OrderDomainEvent {
 
     protected String orderId;
@@ -28,27 +30,4 @@ public abstract class OrderDomainEvent {
         this.occurredAt = occurredAt;
     }
 
-    public String getOrderId() {
-        return orderId;
-    }
-
-    public void setOrderId(String orderId) {
-        this.orderId = orderId;
-    }
-
-    public OrderEvent getEventType() {
-        return eventType;
-    }
-
-    public void setEventType(OrderEvent eventType) {
-        this.eventType = eventType;
-    }
-
-    public LocalDateTime getOccurredAt() {
-        return occurredAt;
-    }
-
-    public void setOccurredAt(LocalDateTime occurredAt) {
-        this.occurredAt = occurredAt;
-    }
 }

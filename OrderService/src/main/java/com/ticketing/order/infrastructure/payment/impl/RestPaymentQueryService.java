@@ -2,8 +2,12 @@ package com.ticketing.order.infrastructure.payment.impl;
 
 import com.ticketing.order.common.config.AppProperties;
 import com.ticketing.order.infrastructure.payment.PaymentQueryService;
+import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -13,9 +17,9 @@ import org.springframework.web.client.RestTemplate;
  * Queries the payment platform via REST API
  */
 @Component("restPaymentQueryService")
+@Slf4j
 public class RestPaymentQueryService implements PaymentQueryService {
 
-    private static final Logger log = LoggerFactory.getLogger(RestPaymentQueryService.class);
 
     private final RestTemplate restTemplate;
     private final AppProperties appProperties;
@@ -63,15 +67,8 @@ public class RestPaymentQueryService implements PaymentQueryService {
     /**
      * Response DTO from payment platform
      */
+    @Data
     public static class PaymentQueryResponse {
         private String status; // PAID, UNPAID
-
-        public String getStatus() {
-            return status;
-        }
-
-        public void setStatus(String status) {
-            this.status = status;
-        }
     }
 }
