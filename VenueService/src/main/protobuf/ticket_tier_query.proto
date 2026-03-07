@@ -1,0 +1,23 @@
+syntax = "proto3";
+
+option java_multiple_files = true;
+option java_package = "com.happy.venue.ticket.grpc";
+option java_outer_classname = "TicketTierQueryProto";
+
+package venue.ticket;
+
+service TicketTierQueryService {
+  rpc GetTicketTierInfo (GetTicketTierInfoRequest) returns (GetTicketTierInfoResponse);
+}
+
+message GetTicketTierInfoRequest {
+  string ticketTierId = 1;
+}
+
+message GetTicketTierInfoResponse {
+  bool found = 1;
+  string ticketTierId = 2;
+  string venueId = 3;
+  string price = 4;
+  string message = 5;
+}

@@ -37,6 +37,8 @@ spring:
     enabled: false
 
 grpc:
+  server:
+    port: 9090
   client:
     inventory-service:
       address: static://ticketing-service:9240
