@@ -133,7 +133,6 @@ data:
     brokerClusterName=DefaultCluster
     brokerName=broker-a
     brokerId=0
-    brokerIP1=rmqbroker
     namesrvAddr=rmqnamesrv:9876
     autoCreateTopicEnable=true
 ---
