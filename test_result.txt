@@ -1,0 +1,14 @@
+wrk -t4 -c100 -d30s --latency -s ./venue_query_pressure.lua http://localhost:8080
+Running 30s test @ http://localhost:8080
+  4 threads and 100 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    24.27ms    8.48ms 227.96ms   87.43%
+    Req/Sec     1.05k   141.43     1.31k    74.06%
+  Latency Distribution
+     50%   22.97ms
+     75%   26.39ms
+     90%   31.79ms
+     99%   49.28ms
+  124851 requests in 30.03s, 89.98MB read
+Requests/sec:   4157.95
+Transfer/sec:      3.00MB

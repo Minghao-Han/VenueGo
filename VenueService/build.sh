@@ -4,7 +4,7 @@
 APP_NAME="venue-service"
 IMAGE_NAME="venue-service"
 TAG="v1"
-REGISTRY="localhost:5000"
+REGISTRY="localhost:32770"
 FULL_IMAGE="${REGISTRY}/${IMAGE_NAME}:${TAG}"
 
 echo "🚀 开始部署 ${APP_NAME}..."

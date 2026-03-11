@@ -4,7 +4,7 @@
 APP_NAME="my-checkin-app"
 IMAGE_NAME="checkin-service"
 TAG="v1"
-REGISTRY="localhost:5000"
+REGISTRY="localhost:32770"
 FULL_IMAGE="${REGISTRY}/${IMAGE_NAME}:${TAG}"
 HOST_PORT=6237
 CONTAINER_PORT=6237

@@ -211,7 +211,7 @@ spec:
       containers:
         - name: auth-service
           image: localhost:5000/auth-service:v1
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 6235
           env:
@@ -247,7 +247,7 @@ spec:
       containers:
         - name: user-service
           image: localhost:5000/user-service:v1
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 6238
             - containerPort: 9090
@@ -288,7 +288,7 @@ spec:
       containers:
         - name: venue-service
           image: localhost:5000/venue-service:v1
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 6236
             - containerPort: 9090
@@ -328,7 +328,7 @@ spec:
       containers:
         - name: ticketing-service
           image: localhost:5000/ticketing-service:v1
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 6240
             - containerPort: 9240
@@ -368,7 +368,7 @@ spec:
       containers:
         - name: checkin-service
           image: localhost:5000/checkin-service:v1
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 6237
           env:
@@ -404,7 +404,7 @@ spec:
       containers:
         - name: order-service
           image: localhost:5000/order-service:v2
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 6239
           env:

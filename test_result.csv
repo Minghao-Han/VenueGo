@@ -1,2 +1,0 @@
-avg req lattency w cache on missing id in ms, w/o cache on missing id, w cache on exist id, w/o cache on exist id,req num,param
-80.79,77,98.24,77,747924,"-t12 -c5000 -d60s"

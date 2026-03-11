@@ -4,7 +4,7 @@
 APP_NAME="my-user-app"
 IMAGE_NAME="user-service"
 TAG="v1"
-REGISTRY="localhost:5000"
+REGISTRY="localhost:32770"
 FULL_IMAGE="${REGISTRY}/${IMAGE_NAME}:${TAG}"
 HOST_PORT=6238
 CONTAINER_PORT=6238

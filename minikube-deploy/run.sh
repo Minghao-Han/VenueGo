@@ -20,7 +20,8 @@ for service in "${SERVICE_DIRS[@]}"; do
 done
 
 for service in "${SERVICE_DIRS[@]}"; do
-	"$PROJECT_ROOT/$service/build.sh"
+	cd "$PROJECT_ROOT/$service"
+	./build.sh
 done
 
 
