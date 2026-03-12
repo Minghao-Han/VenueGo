@@ -17,4 +17,8 @@ public class PurchaseTicketResponse {
     private UUID ticketTierId;
     private Integer purchaseCount;
     private String prepayCode;
+
+    // Status fields
+    private Integer code;  // 0 for success, non-zero for failure
+    private String message;  // Error message if code != 0
 }

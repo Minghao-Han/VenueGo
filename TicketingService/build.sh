@@ -3,7 +3,7 @@
 # --- 1. 配置变量 ---
 APP_NAME="ticketing-service"
 IMAGE_NAME="ticketing-service"
-TAG="v1"
+TAG="v4"
 REGISTRY="localhost:32770"
 FULL_IMAGE="${REGISTRY}/${IMAGE_NAME}:${TAG}"
 

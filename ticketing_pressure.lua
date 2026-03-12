@@ -1,32 +1,36 @@
--- 初始化随机数种子，确保每个线程生成的随机数序列不同
+local tokens = {}
+for line in io.lines("tokens.txt") do
+    tokens[#tokens + 1] = line
+end
+
 math.randomseed(os.time())
+local counter = 0
 
--- 生成随机 UUID 的辅助函数 (符合 v4 格式近似值)
-local function generate_uuid()
-    local template = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'
-    return string.gsub(template, '[xy]', function (c)
-        local v = (c == 'x') and math.random(0, 0xf) or math.random(8, 0xb)
-        return string.format('%x', v)
-    end)
-end
-
--- 设置固定参数
-local ticket_tier_id = "e0b50233-e779-4c63-abcd-3b05a5a7ede6"
-local url = "/api/v1/tickets/purchase"
-
--- 每一次请求都会调用这个函数
 request = function()
-    -- 1. 生成随机 User ID
-    local user_id = generate_uuid()
-    
-    -- 2. 设置 Headers
+    local token = tokens[(counter % #tokens) + 1]
+    counter = counter + 1
+
+    local purchaseCount = math.random(1, 3)
+
     local headers = {}
-    headers["X-User-Id"] = user_id
     headers["Content-Type"] = "application/json"
-    
-    -- 3. 设置 Body (purchaseCount 固定为 1)
-    local body = string.format('{"ticketTierId": "%s", "purchaseCount": 1}', ticket_tier_id)
-    
-    -- 4. 组装请求
-    return wrk.format("POST", url, headers, body)
+    headers["Authorization"] = "Bearer " .. token
+
+    local body = string.format([[
+{
+    "ticketTierId": "9f155be1-5c0c-49c6-ac91-7c9514a7ea41",
+    "purchaseCount": %d
+}
+]], purchaseCount)
+
+    return wrk.format("POST", "/api/v1/tickets/purchase", headers, body)
 end
+-- local printed = 0
+-- response = function(status, headers, body)
+--     if (status < 200 or status >= 400 ) and printed < 10 then
+--         -- print("status:", status)
+--         -- print("body:", body)
+--         -- print("------")
+--         -- printed = printed + 1
+--     end
+-- end

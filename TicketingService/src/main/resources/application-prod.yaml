@@ -36,3 +36,10 @@ ticketing:
       inventory-prefix: "ticket:ivtr:"
       info-prefix: "ticket:info:"
       ordered-prefix: "ticket:ordered:"
+
+logging:
+  level:
+    root: INFO
+    org.hibernate.SQL: INFO
+    # com.happy.TicketingService.service.impl: DEBUG
+    # com.happy.TicketingService.controller: DEBUG

@@ -14,9 +14,11 @@ import com.happy.TicketingService.dto.PurchaseTicketResponse;
 import com.happy.TicketingService.service.TicketPurchaseService;
 
 import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 
 @RestController
 @RequestMapping("/api/v1/tickets")
+@Slf4j
 public class TicketController {
 
     private final TicketPurchaseService ticketPurchaseService;
@@ -29,10 +31,19 @@ public class TicketController {
     public ResponseEntity<PurchaseTicketResponse> purchaseTicket(
             @RequestHeader("X-User-Id") UUID userId,
             @Valid @RequestBody PurchaseTicketRequest request) {
+        long startTime = System.currentTimeMillis();
         PurchaseTicketResponse response = ticketPurchaseService.purchase(
                 userId,
                 request.getTicketTierId(),
                 request.getPurchaseCount());
-        return ResponseEntity.ok(response);
+        long endTime = System.currentTimeMillis();
+        log.debug("whole processing time {}ms",(endTime - startTime));
+        
+        if (response.getCode() == null || response.getCode() == 0) {
+            // Success
+            return ResponseEntity.ok(response);
+        } else {
+            return ResponseEntity.status(response.getCode()).body(response);
+        }
     }
 }

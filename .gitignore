@@ -24,8 +24,9 @@ gradle-app.setting
 
 # Spring Boot
 *.log
-application-*.properties
-application-*.yml
+
+*node_modules/
+tokens.txt
 
 # Dependencies
 *.jar

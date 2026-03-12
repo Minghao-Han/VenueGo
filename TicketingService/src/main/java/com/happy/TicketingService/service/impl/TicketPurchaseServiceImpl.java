@@ -16,6 +16,8 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StreamUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.happy.TicketingService.common.TicketRedisKeyBuilder;
 import com.happy.TicketingService.config.TicketingMqTopicConfig;
@@ -28,10 +30,11 @@ import com.happy.TicketingService.service.PaymentService;
 import com.happy.TicketingService.service.TicketPurchaseService;
 
 import jakarta.annotation.PostConstruct;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class TicketPurchaseServiceImpl implements TicketPurchaseService {
+
+    private static final Logger log = LoggerFactory.getLogger(TicketPurchaseServiceImpl.class);
 
     private final StringRedisTemplate redisTemplate;
     private final GeneralMessageProducer messageProducer;
@@ -66,51 +69,89 @@ public class TicketPurchaseServiceImpl implements TicketPurchaseService {
     }
 
     @Override
-    @Transactional
     public PurchaseTicketResponse purchase(UUID userId, UUID ticketTierId, Integer purchaseCount) {
         if (purchaseCount == null || purchaseCount <= 0) {
             throw new BusinessException("purchaseCount must be greater than 0");
         }
 
-        long result = executePurchaseScript(
-            ticketRedisKeyBuilder.buildInventoryKey(ticketTierId),
-            ticketRedisKeyBuilder.buildOrderedKey(ticketTierId, userId),
-            ticketRedisKeyBuilder.buildInfoKey(ticketTierId),
-                purchaseCount,
-                OffsetDateTime.now().toEpochSecond());
+        long purchaseStartNs = System.nanoTime();
+        long redisStepNs = -1L;
+        long paymentStepNs = -1L;
+        long mqStepNs = -1L;
+        UUID orderId = null;
 
-        if (result == 1L) {
-            throw new BusinessException("Ticket is sold out");
-        }
-        if (result == 2L) {
-            throw new BusinessException("Purchase limit exceeded");
-        }
-        if (result == 3L) {
-            throw new BusinessException("Ticket purchase is not in sale window");
-        }
-        if (result == 4L) {
-            throw new BusinessException("Ticket info missing in Redis");
-        }
+        try {
+            long redisStartNs = System.nanoTime();
+            long result = executePurchaseScript(
+                ticketRedisKeyBuilder.buildInventoryKey(ticketTierId),
+                ticketRedisKeyBuilder.buildOrderedKey(ticketTierId, userId),
+                ticketRedisKeyBuilder.buildInfoKey(ticketTierId),
+                    purchaseCount,
+                    OffsetDateTime.now().toEpochSecond());
+            redisStepNs = System.nanoTime() - redisStartNs;
 
-        UUID orderId = UUID.randomUUID();
-        String prepayCode = paymentService.generatePrepayCode(userId, ticketTierId, orderId, purchaseCount);
+            if (result == 1L) {
+                return PurchaseTicketResponse.builder()
+                        .code(410)
+                        .message("Ticket is sold out")
+                        .build();
+            }
+            if (result == 2L) {
+                return PurchaseTicketResponse.builder()
+                        .code(410)
+                        .message("Purchase limit exceeded")
+                        .build();
+            }
+            if (result == 3L) {
+                return PurchaseTicketResponse.builder()
+                        .code(412)
+                        .message("Ticket purchase is not in sale window")
+                        .build();
+            }
+            if (result == 4L) {
+                return PurchaseTicketResponse.builder()
+                        .code(500)
+                        .message("Ticket info missing in Redis")
+                        .build();
+            }
 
-        TicketPurchaseEvent message = TicketPurchaseEvent.builder()
-                .messageId(UUID.randomUUID().toString())
-                .orderId(orderId)
-                .userId(userId)
-                .ticketTierId(ticketTierId)
-                .purchaseCount(purchaseCount)
-                .occurredAt(OffsetDateTime.now())
-                .build();
-        messageProducer.send(mqTopicConfig.getPurchaseTopic(), message);
+            orderId = UUID.randomUUID();
 
-        return PurchaseTicketResponse.builder()
-                .orderId(orderId)
-                .ticketTierId(ticketTierId)
-                .purchaseCount(purchaseCount)
-                .prepayCode(prepayCode)
-                .build();
+            long paymentStartNs = System.nanoTime();
+            String prepayCode = paymentService.generatePrepayCode(userId, ticketTierId, orderId, purchaseCount);
+            paymentStepNs = System.nanoTime() - paymentStartNs;
+
+            TicketPurchaseEvent message = TicketPurchaseEvent.builder()
+                    .messageId(UUID.randomUUID().toString())
+                    .orderId(orderId)
+                    .userId(userId)
+                    .ticketTierId(ticketTierId)
+                    .purchaseCount(purchaseCount)
+                    .occurredAt(OffsetDateTime.now())
+                    .build();
+
+            long mqStartNs = System.nanoTime();
+            messageProducer.sendAsync(mqTopicConfig.getPurchaseTopic(), message);
+            mqStepNs = System.nanoTime() - mqStartNs;
+
+            return PurchaseTicketResponse.builder()
+                    .code(0)
+                    .orderId(orderId)
+                    .ticketTierId(ticketTierId)
+                    .purchaseCount(purchaseCount)
+                    .prepayCode(prepayCode)
+                    .build();
+        } finally {
+            long totalNs = System.nanoTime() - purchaseStartNs;
+            log.debug("purchase_step=summary userId={} ticketTierId={} orderId={} totalMs={} redisMs={} paymentMs={} mqMs={}",
+                    userId,
+                    ticketTierId,
+                    orderId,
+                    totalNs / 1_000_000.0,
+                    redisStepNs < 0 ? -1.0 : redisStepNs / 1_000_000.0,
+                    paymentStepNs < 0 ? -1.0 : paymentStepNs / 1_000_000.0,
+                    mqStepNs < 0 ? -1.0 : mqStepNs / 1_000_000.0);
+        }
     }
 
     private long executePurchaseScript(String inventoryKey,

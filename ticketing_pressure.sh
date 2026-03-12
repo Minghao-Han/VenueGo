@@ -1,10 +1,6 @@
-docker run --rm \
-    --network venuego-net \
-  -v "$(pwd)/ticketing_pressure.lua:/data/ticketing_pressure.lua" \
-  williamyeh/wrk \
-  -t12 -c5000 -d60s --latency \
-  -s /data/ticketing_pressure.lua \
-  http://ticketing-service:6240
+wrk -t4 -c200 -d60s --latency \
+  -s ticketing_pressure.lua \
+  http://localhost:8080
 
 #   -t 线程数
 #   -c 并发连接数
