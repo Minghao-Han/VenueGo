@@ -18,19 +18,16 @@ request = function()
 
     local body = string.format([[
 {
-    "ticketTierId": "9f155be1-5c0c-49c6-ac91-7c9514a7ea41",
-    "purchaseCount": %d
+    "ticketTierId": "be3b875a-ac63-4120-8c72-2a695cf0eacc",
+    "purchaseCount": 1
 }
 ]], purchaseCount)
 
     return wrk.format("POST", "/api/v1/tickets/purchase", headers, body)
 end
--- local printed = 0
 -- response = function(status, headers, body)
---     if (status < 200 or status >= 400 ) and printed < 10 then
---         -- print("status:", status)
---         -- print("body:", body)
---         -- print("------")
---         -- printed = printed + 1
+--     if status < 200 or status >= 400 then
+--         print("status:", status)
+--         print("body:", body)
 --     end
 -- end

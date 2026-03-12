@@ -13,18 +13,20 @@ Running 30s test @ http://localhost:8080
 Requests/sec:   4157.95
 Transfer/sec:      3.00MB
 
+rocketmq sync send 变成async send快了20ms(60->40)
 
 Running 1m test @ http://localhost:8080
   4 threads and 200 connections
+
   Thread Stats   Avg      Stdev     Max   +/- Stdev
-    Latency    68.05ms   14.83ms 492.43ms   90.87%
-    Req/Sec   741.99     99.63     1.27k    73.94%
+    Latency    45.49ms   14.07ms 332.92ms   87.77%
+    Req/Sec     1.11k   160.19     1.50k    77.78%
   Latency Distribution
-     50%   65.32ms
-     75%   69.66ms
-     90%   79.53ms
-     99%  112.71ms
-  177223 requests in 1.00m, 55.64MB read
-  Non-2xx or 3xx responses: 177043
-Requests/sec:   2949.26
-Transfer/sec:      0.93MB
+     50%   45.08ms
+     75%   50.77ms
+     90%   57.12ms
+     99%   90.52ms
+  265561 requests in 1.00m, 105.01MB read
+  Non-2xx or 3xx responses: 264561
+Requests/sec:   4418.66
+Transfer/sec:      1.75MB

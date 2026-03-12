@@ -326,7 +326,7 @@ spec:
     spec:
       containers:
         - name: ticketing-service
-          image: localhost:5000/ticketing-service:v1
+          image: localhost:5000/ticketing-service:v4
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 6240

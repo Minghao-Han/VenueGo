@@ -27,6 +27,7 @@ gradle-app.setting
 
 *node_modules/
 tokens.txt
+*nohup.out
 
 # Dependencies
 *.jar
