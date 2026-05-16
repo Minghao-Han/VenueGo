@@ -12,16 +12,16 @@ import org.springframework.graphql.data.method.annotation.QueryMapping;
 import org.springframework.stereotype.Controller;
 
 import com.happy.VenueService.entity.Venue;
-import com.happy.VenueService.service.VenueService;
+import com.happy.VenueService.service.VenueQueryService;
 
 @Controller
 public class VenueGraphQLController {
 
-    private final VenueService venueService;
+    private final VenueQueryService venueQueryService;
 
     // Constructor injection for service dependency.
-    public VenueGraphQLController(VenueService venueService) {
-        this.venueService = venueService;
+    public VenueGraphQLController(VenueQueryService venueQueryService) {
+        this.venueQueryService = venueQueryService;
     }
 
     /**
@@ -39,7 +39,7 @@ public class VenueGraphQLController {
             ? ScrollPosition.forward(Collections.singletonMap("id", UUID.fromString(after)))
             : ScrollPosition.offset();
         // Execute filtered query in service and assemble GraphQL connection response.
-        Window<Venue> window = venueService.getVenues(filter, position, first);
+        Window<Venue> window = venueQueryService.getVenues(filter, position, first);
         List<VenueEdge> edges = window.getContent().stream()
                 .map(venue -> new VenueEdge(venue.getId().toString(), venue))
                 .collect(Collectors.toList());
@@ -50,7 +50,7 @@ public class VenueGraphQLController {
 
     @QueryMapping
     public Venue venueById(@Argument UUID id) {
-        return venueService.getVenueById(id);
+        return venueQueryService.getVenueById(id);
     }
 
     public static class VenueConnection {

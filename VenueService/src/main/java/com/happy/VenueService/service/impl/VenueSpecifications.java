@@ -18,12 +18,12 @@ public class VenueSpecifications {
 	    // cb (CriteriaBuilder) creates predicates such as equality.
 	    // Equivalent SQL: WHERE city_code = 'SHANGHAI'
 	    return (root, query, cb) -> 
-	        (city == null || city.isEmpty()) ? null : cb.equal(root.get("cityCode"), city);
+	        (city == null || city.isEmpty()) ? cb.conjunction() : cb.equal(root.get("cityCode"), city);
 	}
 	
 	public static Specification<Venue> minPriceGreaterThan(BigDecimal minPrice) {
 	    return (root, query, cb) -> {
-	            if (minPrice == null) return null;
+	            if (minPrice == null) return cb.conjunction();
 	            // Price is stored on TicketTier, so a join is required.
 	            // This produces an inner join between Venue and ticketTiers.
 	            Join<Venue, TicketTier> tiers = root.join("ticketTiers");
@@ -33,26 +33,26 @@ public class VenueSpecifications {
 	}
     public static Specification<Venue> maxPriceLessThan(BigDecimal maxPrice) {
 	    return (root, query, cb) -> {
-	            if (maxPrice == null) return null;
+	            if (maxPrice == null) return cb.conjunction();
 	            Join<Venue, TicketTier> tiers = root.join("ticketTiers");
 	            return cb.lessThanOrEqualTo(tiers.get("price"), maxPrice);
 	    };
 	}
     public static Specification<Venue> hasStartTimeBefore(OffsetDateTime startTimeBefore) {
         return (root, query, cb) -> {
-                if (startTimeBefore == null) return null;
+                if (startTimeBefore == null) return cb.conjunction();
                 return cb.lessThanOrEqualTo(root.get("startTime"), startTimeBefore);
         };
     }
     public static Specification<Venue> hasStartTimeAfter(OffsetDateTime startTimeAfter) {
         return (root, query, cb) -> {
-                if (startTimeAfter == null) return null;
+                if (startTimeAfter == null) return cb.conjunction();
                 return cb.greaterThanOrEqualTo(root.get("startTime"), startTimeAfter);
         };
     }
     public static Specification<Venue> hasCategoryIn(List<String> categories) {
         return (root, query, cb) -> {
-                if (categories == null || categories.isEmpty()) return null;
+                if (categories == null || categories.isEmpty()) return cb.conjunction();
                 Join<Venue, TicketTier> tiers = root.join("ticketTiers");
                 // SQL: WHERE ticket_tiers.category IN ('Music', 'Sports')
                 return tiers.get("category").in(categories);

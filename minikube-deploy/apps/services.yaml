@@ -193,6 +193,20 @@ spec:
       port: 10912
       targetPort: 10912
 ---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+data:
+  SPRING_PROFILES_ACTIVE: prod
+  SPRING_DATASOURCE_URL: "jdbc:mysql://mysql-dev:3306/venuego?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=utf8&allowPublicKeyRetrieval=true"
+  SPRING_DATASOURCE_USERNAME: root
+  SPRING_DATASOURCE_PASSWORD: "4445566"
+  SPRING_DATA_REDIS_HOST: redis-dev
+  SPRING_DATA_REDIS_PORT: "6379"
+  SPRING_JPA_SHOW_SQL: "false"
+  ROCKETMQ_NAME_SERVER: rocketmq-namesrv:9876
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -206,16 +220,20 @@ spec:
     metadata:
       labels:
         app: auth-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "6235"
     spec:
       containers:
         - name: auth-service
-          image: localhost:5000/auth-service:v1
-          imagePullPolicy: IfNotPresent
+          image: minghaohan/venuego-auth:v1
+          imagePullPolicy: Always
           ports:
             - containerPort: 6235
-          env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: prod
+          envFrom:
+            - configMapRef:
+                name: app-config
 ---
 apiVersion: v1
 kind: Service
@@ -242,17 +260,21 @@ spec:
     metadata:
       labels:
         app: user-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "6238"
     spec:
       containers:
         - name: user-service
-          image: localhost:5000/user-service:v1
-          imagePullPolicy: IfNotPresent
+          image: minghaohan/venuego-user:v1
+          imagePullPolicy: Always
           ports:
             - containerPort: 6238
             - containerPort: 9090
-          env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: prod
+          envFrom:
+            - configMapRef:
+                name: app-config
 ---
 apiVersion: v1
 kind: Service
@@ -270,6 +292,19 @@ spec:
       port: 9090
       targetPort: 9090
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  # HTTP-only alias so Prometheus can resolve user-service:6238
+  name: user-service
+spec:
+  selector:
+    app: user-service
+  ports:
+    - name: http
+      port: 6238
+      targetPort: 6238
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -283,17 +318,21 @@ spec:
     metadata:
       labels:
         app: venue-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "6236"
     spec:
       containers:
         - name: venue-service
-          image: localhost:5000/venue-service:v1
-          imagePullPolicy: IfNotPresent
+          image: minghaohan/venuego-venue:v1
+          imagePullPolicy: Always
           ports:
             - containerPort: 6236
             - containerPort: 9090
-          env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: prod
+          envFrom:
+            - configMapRef:
+                name: app-config
 ---
 apiVersion: v1
 kind: Service
@@ -323,17 +362,21 @@ spec:
     metadata:
       labels:
         app: ticketing-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "6240"
     spec:
       containers:
         - name: ticketing-service
-          image: localhost:5000/ticketing-service:v4
-          imagePullPolicy: IfNotPresent
+          image: minghaohan/venuego-ticketing:v1
+          imagePullPolicy: Always
           ports:
             - containerPort: 6240
             - containerPort: 9240
-          env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: prod
+          envFrom:
+            - configMapRef:
+                name: app-config
 ---
 apiVersion: v1
 kind: Service
@@ -363,16 +406,20 @@ spec:
     metadata:
       labels:
         app: checkin-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "6237"
     spec:
       containers:
         - name: checkin-service
-          image: localhost:5000/checkin-service:v1
-          imagePullPolicy: IfNotPresent
+          image: minghaohan/venuego-checkin:v1
+          imagePullPolicy: Always
           ports:
             - containerPort: 6237
-          env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: prod
+          envFrom:
+            - configMapRef:
+                name: app-config
 ---
 apiVersion: v1
 kind: Service
@@ -399,20 +446,23 @@ spec:
     metadata:
       labels:
         app: order-service
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/metrics"
+        prometheus.io/port: "6239"
     spec:
       containers:
         - name: order-service
-          image: localhost:5000/order-service:v2
-          imagePullPolicy: IfNotPresent
+          image: minghaohan/venuego-order:v1
+          imagePullPolicy: Always
           ports:
             - containerPort: 6239
+          envFrom:
+            - configMapRef:
+                name: app-config
           env:
-            - name: SPRING_PROFILES_ACTIVE
-              value: prod
             - name: PAYMENT_QUERY_URL
               value: http://payment-service:8080/query
-            - name: ROCKETMQ_NAME_SERVER
-              value: rocketmq-namesrv:9876
 ---
 apiVersion: v1
 kind: Service
@@ -426,35 +476,35 @@ spec:
       port: 6239
       targetPort: 6239
 ---
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: test-echo
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: echo
-  template:
-    metadata:
-      labels:
-        app: echo
-    spec:
-      containers:
-        - name: echo-server
-          image: ealen/echo-server:latest
-          imagePullPolicy: IfNotPresent
-          ports:
-            - containerPort: 80
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: test-echo-service
-spec:
-  selector:
-    app: echo
-  ports:
-    - name: http
-      port: 80
-      targetPort: 80
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: test-echo
+# spec:
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       app: echo
+#   template:
+#     metadata:
+#       labels:
+#         app: echo
+#     spec:
+#       containers:
+#         - name: echo-server
+#           image: ealen/echo-server:latest
+#           imagePullPolicy: IfNotPresent
+#           ports:
+#             - containerPort: 80
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: test-echo-service
+# spec:
+#   selector:
+#     app: echo
+#   ports:
+#     - name: http
+#       port: 80
+#       targetPort: 80

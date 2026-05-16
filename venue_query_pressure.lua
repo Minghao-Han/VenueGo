@@ -1,5 +1,5 @@
 local url = "/graphql"
-local vid = "019cdabf-4f4f-72d2-822d-c2d867d62bef"
+local vid = "019cf402-cced-7e67-bf02-3219924eaf46"
 
 local json_body = [[{
   "query": "query GetVenueDetail($vid: ID!) { venueById(id: $vid) { id name cityCode address description posterUrl ticketTiers { id price tierName totalCapacity saleStartTime saleEndTime } } }",

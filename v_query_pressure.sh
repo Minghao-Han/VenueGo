@@ -1,6 +1,6 @@
-wrk -t4 -c100 -d60s --latency \
+wrk -t8 -c100 -d60s --latency \
   -s ./venue_query_pressure.lua \
-  http://localhost:8080
+  http://192.168.49.2:30147
 
 #   -t 线程数
 #   -c 并发连接数

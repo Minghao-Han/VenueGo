@@ -7,15 +7,10 @@ import java.util.UUID;
 
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.domain.ScrollPosition;
-import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Window;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.happy.VenueService.controller.VenueFilter;
 import com.happy.VenueService.dto.TicketTierRequest;
 import com.happy.VenueService.dto.VenueResponse;
 import com.happy.VenueService.dto.VenueUpsertRequest;
@@ -86,27 +81,6 @@ public class VenueDbOnlyServiceImpl implements VenueService {
         List<UUID> deletedTierIds = venue.getTicketTiers().stream().map(TicketTier::getId).toList();
         venueRepository.delete(venue);
         publishDeletedTierEvent(deletedTierIds, List.of());
-    }
-
-    @Override
-    public Venue getVenueById(UUID venueId) {
-        return getVenueByIdOrThrow(venueId);
-    }
-
-    @Override
-    public Window<Venue> getVenues(VenueFilter filter, ScrollPosition position, Integer first) {
-        VenueFilter safeFilter = filter != null ? filter : new VenueFilter();
-        Specification<Venue> spec = Specification
-                .where(VenueSpecifications.hasCity(safeFilter.getCityCode()))
-                .and(VenueSpecifications.minPriceGreaterThan(safeFilter.getMinPrice()))
-                .and(VenueSpecifications.maxPriceLessThan(safeFilter.getMaxPrice()))
-                .and(VenueSpecifications.hasStartTimeBefore(safeFilter.getStartTimeBefore()))
-                .and(VenueSpecifications.hasStartTimeAfter(safeFilter.getStartTimeAfter()))
-                .and(VenueSpecifications.hasCategoryIn(safeFilter.getCategories()));
-
-        return venueRepository.findBy(spec, q -> q.sortBy(Sort.by("id").ascending())
-                .limit(first != null ? first : 10)
-                .scroll(position));
     }
 
     private void validateTicketTierUpdateWindow(List<TicketTierRequest> ticketTiers) {
