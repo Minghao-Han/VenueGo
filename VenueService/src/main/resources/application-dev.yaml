@@ -36,6 +36,12 @@ spring:
   flyway:
     enabled: false
 
+  cache:
+    type: caffeine
+    cache-names: venueById,venuesPage
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=10m
+
 grpc:
   server:
     port: 9090
@@ -80,3 +86,4 @@ bloom-filter:
 venue:
   cache:
     enabled: true
+    level: L2

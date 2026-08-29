@@ -7,17 +7,17 @@ spring:
   datasource:
     type: com.zaxxer.hikari.HikariDataSource
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://mysql-dev:3306/venuego?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=utf8&allowPublicKeyRetrieval=true
-    username: root
-    password: 4445566
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
   data:
     redis:
-      host: redis-dev
-      port: 6379
+      host: ${SPRING_DATA_REDIS_HOST}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: false
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
     properties:
       hibernate:
         format_sql: true
@@ -25,7 +25,7 @@ spring:
           time_zone: UTC
 
 rocketmq:
-  name-server: rmqnamesrv:9876
+  name-server: ${ROCKETMQ_NAME_SERVER}
   producer:
     group: order-producer-group
     send-message-timeout: 3000
@@ -38,7 +38,7 @@ grpc:
 
 app:
   order:
-    name-server: rmqnamesrv:9876
+    name-server: ${ROCKETMQ_NAME_SERVER}
     pay-timeout-minutes: 15
     timeout-topic: order_timeout_topic
     timeout-consumer-group: order-timeout-consumer-group

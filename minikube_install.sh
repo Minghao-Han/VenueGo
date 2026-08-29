@@ -12,7 +12,7 @@ curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-
 sudo install minikube-linux-amd64 /usr/local/bin/minikube
 
 # start minukube with 2 nodes, 4 cpus and 8GB of memory
-minikube start --nodes 2 --cpus 4 --memory 8192 --driver=docker
+minikube start --cpus 4 --memory 8192 --driver=docker
 
 # download kong ingress
 # 添加仓库

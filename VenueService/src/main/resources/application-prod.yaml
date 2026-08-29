@@ -6,9 +6,9 @@ spring:
     name: venuego.venue
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://mysql-dev:3306/venuego?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=utf8&allowPublicKeyRetrieval=true
-    username: root
-    password: 4445566
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
@@ -17,7 +17,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: false
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
     properties:
       hibernate:
         format_sql: true
@@ -29,12 +29,18 @@ spring:
 
   data:
     redis:
-      host: redis-dev
-      port: 6379
+      host: ${SPRING_DATA_REDIS_HOST}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
       timeout: 2s
 
   flyway:
     enabled: false
+
+  cache:
+    type: caffeine
+    cache-names: venueById,venuesPage
+    caffeine:
+      spec: maximumSize=1000,expireAfterWrite=10m
 
 grpc:
   server:
@@ -51,7 +57,7 @@ ticketing:
       delay-ms: 300
 
 rocketmq:
-  name-server: rocketmq-namesrv:9876
+  name-server: ${ROCKETMQ_NAME_SERVER}
 
 management:
   endpoint:
@@ -62,6 +68,10 @@ management:
     web:
       exposure:
         include: health,info,metrics,prometheus
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
 
 logging:
   level:
@@ -72,10 +82,11 @@ logging:
 
 bloom-filter:
   venue:
-    name: "venue:bloom:filter"          
-    expected-insertions: 1000000        
+    name: "venue:bloom:filter"
+    expected-insertions: 1000000
     false-probability: 0.03
 
 venue:
   cache:
     enabled: true
+    level: L2

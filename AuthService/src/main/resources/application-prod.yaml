@@ -7,9 +7,9 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://mysql-dev:3306/venuego?useSSL=false&serverTimezone=UTC&useUnicode=true&characterEncoding=utf8&allowPublicKeyRetrieval=true
-    username: root
-    password: 4445566
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
     hikari:
       maximum-pool-size: 20
       minimum-idle: 5
@@ -19,8 +19,8 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update   # 本地开发：自动根据实体类创建/更新表结构；生产建议 validate + Flyway
-    show-sql: false
+      ddl-auto: update
+    show-sql: ${SPRING_JPA_SHOW_SQL:false}
     properties:
       hibernate:
         format_sql: true
@@ -34,8 +34,8 @@ spring:
 
   data:
     redis:
-      host: redis-dev
-      port: 6379
+      host: ${SPRING_DATA_REDIS_HOST}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
       timeout: 2s
 
 security:
@@ -48,8 +48,7 @@ logging:
   level:
     root: INFO
     org.hibernate.SQL: DEBUG
-    org.hibernate.orm.jdbc.bind: TRACE   # 打印SQL参数（Spring Boot 3 / Hibernate 6）
-    # 如果你是旧版本可用：org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+    org.hibernate.orm.jdbc.bind: TRACE
 
 management:
   endpoint:
@@ -60,6 +59,10 @@ management:
     web:
       exposure:
         include: health,info,metrics,prometheus
+  metrics:
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
 
 
 grpc:
